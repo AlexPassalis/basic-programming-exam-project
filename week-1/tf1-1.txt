@@ -1,3 +1,0 @@
-15
-burrow 3
-rabbit 3-7

@@ -1,3 +1,0 @@
-15
-burrow 1
-rabbit 5
