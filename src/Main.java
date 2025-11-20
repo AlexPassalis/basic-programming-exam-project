@@ -4,88 +4,108 @@ import itumulator.executable.DisplayInformation;
 import itumulator.executable.Program;
 import itumulator.world.Location;
 import itumulator.world.World;
-import itumulator.simulator.Actor;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.Scanner;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException, IllegalArgumentException {
+    public static World world;
+
+    public static void main(String[] args) throws FileNotFoundException {
+        if (args.length == 0) {
+            System.out.println("Please provide input filename.");
+            return;
+        }
+        String filename = args[0];
+        boolean isTesting = false;
+
+        if (args.length > 1) {
+            isTesting = Boolean.parseBoolean(args[1]);
+        }
+
+        String folder_path = "src/data/week-1/";
+        Scanner scanner = new Scanner(new File(folder_path + filename));
+        int size = scanner.nextInt();
         int display_size = 800;
         int delay = 75;
 
-        File folder = new File("./src/data/week-1");
-        File[] files = folder.listFiles();
+        HashMap<String, HashMap<String, Integer>> data = new HashMap<>();
 
-        if (files == null) {
-            System.err.println("Folder not found or not a directory");
-            return;
-        }
-
-        for (File file : files) {
-                Scanner sc = new Scanner(file);
-                
-                int size = sc.nextInt();
-                HashMap<String, HashMap<String, Integer>> data = new HashMap<>();    
-                
-                sc.nextLine();
-                while (sc.hasNextLine()) {
-                    String line = sc.nextLine().trim();
-                    if (line.isEmpty()) {
-                        continue;
-                    }
-
-                    String[] parts = line.split("\\s+");
-                    
-                    String type = parts[0];
-                    if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow")) {
-                        throw new IllegalArgumentException("Invalid type: " + type);
-                    }
-
-                    HashMap<String, Integer> values = new HashMap<>();
-                    String count_or_interval = parts[1];
-                    if (!count_or_interval.contains("-")) {
-                        int count = Integer.parseInt(count_or_interval);
-                        values.put("count", count);
-                        values.put("min", 0);
-                        values.put("max", 0);
-                    } else {
-                        String[] range = count_or_interval.split("-");
-                        values.put("count", 0);
-                        values.put("min", Integer.parseInt(range[0]));
-                        values.put("max", Integer.parseInt(range[1]));
-                    }
-                    data.put(type, values);
+        scanner.nextLine();
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine().trim();
+            if (line.isEmpty()) {
+                continue;
             }
 
-            Program p = new Program(size, display_size, delay);
-            World w = p.getWorld();
-            DisplayInformation GrassInfo = new DisplayInformation(Color.green, "GrassJava");
-            p.setDisplayInformation(Grass.class, GrassInfo);
-            p.show();
+            String[] parts = line.split("\\s+");
 
-            for (Map.Entry<String, HashMap<String, Integer>> entry : data.entrySet()) {
-                String type = entry.getKey();
-                if (type.equals("grass")) {
+            String type = parts[0];
+            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow")) {
+                throw new IllegalArgumentException("Invalid type: " + type);
+            }
 
+            HashMap<String, Integer> values = new HashMap<>();
+            String count_or_interval = parts[1];
+            if (!count_or_interval.contains("-")) {
+                int count = Integer.parseInt(count_or_interval);
+                values.put("count", count);
+                values.put("min", 0);
+                values.put("max", 0);
+            } else {
+                String[] range = count_or_interval.split("-");
+                values.put("count", 0);
+                values.put("min", Integer.parseInt(range[0]));
+                values.put("max", Integer.parseInt(range[1]));
+            }
+            data.put(type, values);
+        }
+        scanner.close();
+
+        Program program = new Program(size, display_size, delay);
+        world = program.getWorld();
+        DisplayInformation GrassInfo = new DisplayInformation(Color.green, "GrassJava");
+        program.setDisplayInformation(Grass.class, GrassInfo);
+
+        for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
+            String type = actor.getKey();
+            HashMap<String, Integer> count = actor.getValue();
+            int amount = count.get("count");
+            if (amount == 0) {
+                int min = count.get("min");
+                int max = count.get("max");
+                amount = new Random().nextInt(max - min + 1) + min;
+            }
+
+            if (type.equals("grass")) {
+                for (int i = 0; i < amount; i = i + 1) {
+                    Random rand = new Random();
+                    int x = rand.nextInt(size);
+                    int y = rand.nextInt(size);
+
+                    Location location = new Location(x, y);
+                    while (!world.isTileEmpty(location)) {
+                        x = rand.nextInt(size);
+                        y = rand.nextInt(size);
+
+                        location = new Location (x, y);
+                    }
+                    world.setTile(location, new Grass());
                 }
 
-                if (type.equals("rabbit")) {
-
+                if (!isTesting) {
+                    program.show();
                 }
 
-                if (type.equals("burrow")) {
-
+                for (int i = 0; i < 200; i++) {
+                    program.simulate();
                 }
             }
         }
-            // w.setTile(new Location(0, 0), new <MyClass>());
+    }
 
-          // p.setDisplayInformation(<MyClass>.class, new DisplayInformation(<Color>, "<ImageName>"));
-
-          // p.show();
+    public static World getWorld() {
+        return world;
     }
 }
