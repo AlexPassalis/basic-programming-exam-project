@@ -70,7 +70,7 @@ public class Main {
 
         DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
         program.setDisplayInformation(Rabbit.class, RabbitInfo);
-
+        Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String type = actor.getKey();
             HashMap<String, Integer> count = actor.getValue();
@@ -83,7 +83,6 @@ public class Main {
 
             if (type.equals("grass")) {
                 for (int i = 0; i < amount; i = i + 1) {
-                    Random rand = new Random();
                     int x = rand.nextInt(size);
                     int y = rand.nextInt(size);
 
@@ -104,17 +103,13 @@ public class Main {
 
             if (type.equals("rabbit")) {
                 for (int i = 0; i < amount; i++) {
-                    Random rand = new Random();
+
                     int x = rand.nextInt(size);
                     int y = rand.nextInt(size);
 
-                    Location location = new Location(x, y);
-                    while (!world.isTileEmpty(location)) {
-                        x = rand.nextInt(size);
-                        y = rand.nextInt(size);
-                        location = new Location(x, y);
-                    }
-                    world.setTile(location, new Rabbit());
+                    Location loc = new Location(x, y);
+
+                    world.setTile(loc, new Rabbit());
                 }
             }
 
