@@ -70,6 +70,8 @@ public class Main {
         program.setDisplayInformation(Grass.class, GrassInfo);
         DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
         program.setDisplayInformation(Rabbit.class, RabbitInfo);
+        DisplayInformation RabbitHoleInfo = new DisplayInformation(Color.black, "RabbitHole");
+        program.setDisplayInformation(RabbitHole.class, RabbitHoleInfo);
 
         Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
@@ -106,13 +108,13 @@ public class Main {
                     int y = rand.nextInt(size);
                     Location location = new Location(x, y);
 
-                    while (world.isTileEmpty(location)) {
+                    while (!world.isTileEmpty(location)) {
                         x = rand.nextInt(size);
                         y = rand.nextInt(size);
                         location = new Location(x, y);
                     }
 
-                    world.setTile(location, new Rabbit());
+                    world.setTile(location, new Rabbit(world));
                 }
             }
 
