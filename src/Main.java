@@ -16,21 +16,21 @@ public class Main {
         if (args.length == 0) {
             System.out.println("Please provide input filename.");
             return;
-        }
+        } // If the user does not provide the filename that Main will generate the world out of, notify him.
         String filename = args[0];
+
         boolean isTesting = false;
-
-        if (args.length > 1) {
+        if (args.length == 2) {
             isTesting = Boolean.parseBoolean(args[1]);
-        }
+        } // Use this boolean to avoid unnecesary stuff when running tests.
 
-        String folder_path = "src/data/week-1/";
+        String folder_path = "src/data/week-1/"; // The folder where all the input files are stored.
         Scanner scanner = new Scanner(new File(folder_path + filename));
-        int size = scanner.nextInt();
+        int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
         int delay = 75;
 
-        HashMap<String, HashMap<String, Integer>> data = new HashMap<>();
+        HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
         scanner.nextLine();
         while (scanner.hasNextLine()) {
@@ -68,6 +68,9 @@ public class Main {
         DisplayInformation GrassInfo = new DisplayInformation(Color.green, "GrassJava");
         program.setDisplayInformation(Grass.class, GrassInfo);
 
+        DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
+        program.setDisplayInformation(Rabbit.class, RabbitInfo);
+
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String type = actor.getKey();
             HashMap<String, Integer> count = actor.getValue();
@@ -85,23 +88,44 @@ public class Main {
                     int y = rand.nextInt(size);
 
                     Location location = new Location(x, y);
-                    while (!world.isTileEmpty(location)) {
+                    while (world.containsNonBlocking(location)) {
                         x = rand.nextInt(size);
                         y = rand.nextInt(size);
+                        location = new Location(x, y);
+                    // while (!world.isTileEmpty(location)) {
+                       //  x = rand.nextInt(size);
+                       //  y = rand.nextInt(size);
 
-                        location = new Location (x, y);
+                       //  location = new Location (x, y);
                     }
                     world.setTile(location, new Grass());
                 }
+            }
 
-                if (!isTesting) {
-                    program.show();
-                }
+            if (type.equals("rabbit")) {
+                for (int i = 0; i < amount; i++) {
+                    Random rand = new Random();
+                    int x = rand.nextInt(size);
+                    int y = rand.nextInt(size);
 
-                for (int i = 0; i < 200; i++) {
-                    program.simulate();
+                    Location location = new Location(x, y);
+                    while (!world.isTileEmpty(location)) {
+                        x = rand.nextInt(size);
+                        y = rand.nextInt(size);
+                        location = new Location(x, y);
+                    }
+                    world.setTile(location, new Rabbit());
                 }
             }
+
+        }
+
+        if (!isTesting) {
+            program.show();
+        }
+
+        for (int i = 0; i < 200; i++) { // simulates the world with 200 simulations
+            program.simulate();
         }
     }
 
