@@ -64,18 +64,18 @@ public class TestGrass {
 
         Map<Object, Location> entities = world.getEntities();
         Location location = null;
-        Grass grass = null;
          for(Object entity : entities.keySet()) {
-            if (entity instanceof Grass) {
-                grass = (Grass) entity; // grass has the methods from Grass now
-                location = entities.get(entity);
+            if (entity instanceof Rabbit) {
+                int x = entities.get(entity).getX();
+                int y = entities.get(entity).getY();
+                location = new Location(x, y);
+
                 break;
             }
         }
 
-        Rabbit testRabbit = new Rabbit();
-        Location finalLocation = location;
-        assertDoesNotThrow(() -> world.setTile(finalLocation, testRabbit));
+        boolean location_contains_non_blocking = world.containsNonBlocking(location);
+        assertTrue(location_contains_non_blocking);
     }
 }
 

@@ -28,7 +28,7 @@ public class Main {
         Scanner scanner = new Scanner(new File(folder_path + filename));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
-        int delay = 75;
+        int delay = isTesting ? 15 : 75;
 
         HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
@@ -65,11 +65,12 @@ public class Main {
 
         Program program = new Program(size, display_size, delay);
         world = program.getWorld();
+
         DisplayInformation GrassInfo = new DisplayInformation(Color.green, "GrassJava");
         program.setDisplayInformation(Grass.class, GrassInfo);
-
         DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
         program.setDisplayInformation(Rabbit.class, RabbitInfo);
+
         Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String type = actor.getKey();
@@ -81,35 +82,37 @@ public class Main {
                 amount = new Random().nextInt(max - min + 1) + min;
             }
 
+
+
             if (type.equals("grass")) {
                 for (int i = 0; i < amount; i = i + 1) {
                     int x = rand.nextInt(size);
                     int y = rand.nextInt(size);
-
                     Location location = new Location(x, y);
+
                     while (world.containsNonBlocking(location)) {
                         x = rand.nextInt(size);
                         y = rand.nextInt(size);
                         location = new Location(x, y);
-                    // while (!world.isTileEmpty(location)) {
-                       //  x = rand.nextInt(size);
-                       //  y = rand.nextInt(size);
-
-                       //  location = new Location (x, y);
                     }
+
                     world.setTile(location, new Grass());
                 }
             }
 
             if (type.equals("rabbit")) {
                 for (int i = 0; i < amount; i++) {
-
                     int x = rand.nextInt(size);
                     int y = rand.nextInt(size);
+                    Location location = new Location(x, y);
 
-                    Location loc = new Location(x, y);
+                    while (world.isTileEmpty(location)) {
+                        x = rand.nextInt(size);
+                        y = rand.nextInt(size);
+                        location = new Location(x, y);
+                    }
 
-                    world.setTile(loc, new Rabbit());
+                    world.setTile(location, new Rabbit());
                 }
             }
 
@@ -119,7 +122,7 @@ public class Main {
             program.show();
         }
 
-        for (int i = 0; i < 200; i++) { // simulates the world with 200 simulations
+        for (int i = 0; i < 200; i++) { // runs the program with 200 simulations
             program.simulate();
         }
     }
