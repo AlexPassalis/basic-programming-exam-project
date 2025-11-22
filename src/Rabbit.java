@@ -1,6 +1,5 @@
 import itumulator.simulator.Actor;
 import java.util.Random;
-import itumulator.world.NonBlocking;
 import itumulator.world.World;
 import java.util.ArrayList;
 import itumulator.world.Location;
@@ -12,6 +11,8 @@ public class Rabbit implements Actor {
     private World world;
     private int age;
     private double energy;
+    private Burrow burrow;
+    private Location sleeping_location;
     private int simulation_counts;
 
     Rabbit(World world) {
@@ -20,40 +21,114 @@ public class Rabbit implements Actor {
         energy = 100;
     }
 
-    @Override
-    public void act(World world) {
-        simulation_counts = simulation_counts + 1;
-        move();
-
-        energy = energy - (age * 0.75); // The older it gets, the more energy it misses per round to move.
-        if (energy <= 0) {
-            world.delete(this);
+    private Burrow getClosestBurrow() {
+        Map<Object, Location> entities_in_world = world.getEntities(); // Get all the entities in the world.
+        Set<Burrow> burrows = new HashSet<>();
+        for (Object entity : entities_in_world.keySet()) {
+            if (entity instanceof Burrow) {
+                burrows.add((Burrow) entity); // If it is a burrow, add it to the set.
+            }
         }
 
-        reproduce();
+        if (burrows.isEmpty()) {
+            return null; // If there are no burrows, return null.
+        }
 
-        if (simulation_counts % 10 == 0) { // Age by 1 for every 10 steps
+        Location rabbit_location = world.getLocation(this); // Get the location of the rabbit.
+
+        Burrow closest_burrow = null;
+        int min_distance = Integer.MAX_VALUE;
+        for (Burrow borr : burrows) {
+            Location burrow_location = entities_in_world.get(borr);
+            int dx = Math.abs(rabbit_location.getX() - burrow_location.getX());
+            int dy = Math.abs(rabbit_location.getY() - burrow_location.getY());
+
+            int distance = dx + dy;
+            if (distance < min_distance) { // If this burrow is closer, update the closest_burrow variable.
+                min_distance = distance;
+                closest_burrow = borr;
+            }
+        }
+
+        return closest_burrow; // Return the borrow that is closest in the world.
+    }
+
+    @Override
+    public void act(World world) {
+        simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
+        if (simulation_counts == 1) {
+            burrow = getClosestBurrow(); // Attach the closest borrow to the rabbit.
+        }
+
+        if (!world.isNight()) {
+            this.wakeUp(); // Wake the rabbit up if it is not night anymore.
+        }
+
+        if (sleeping_location == null) {
+            move(); // Move the rabbit, if it is not sleeping.
+        }
+
+        double energy_multiplier = 1.25;
+        if (sleeping_location == null) { // Rabbit is awake.
+            energy = energy - (age * energy_multiplier); // The rabbit losses energy from being awake.
+            if (energy <= 0) {
+                world.delete(this); // The rabbit dies when it does not have any energy left.
+                return;
+            }
+            reproduce(); // The rabbit can reproduce when awake.
+        } else { // Rabbit is sleeping.
+            energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
+        }
+
+        if (simulation_counts % 10 == 0) { // Age the rabbit by 1 year every 10 program simulations.
             age = age + 1;
         }
     }
 
     public void move() {
-        Location location = world.getLocation(this);
-        Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(location);
+        Location current_location = world.getLocation(this); // Get the current location of the rabbit.
+        Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location); // Get all the empty surrounding tiles.
 
         if (neighbour_empty_tiles.isEmpty()) {
-            return;
+            return; // If there are no empty surrounding tiles, let the rabbit stay where it is at.
         }
 
         List<Location> tiles = new ArrayList<>(neighbour_empty_tiles);
-        int randomIndex = new Random().nextInt(tiles.size());
-        Location randomTile = tiles.get(randomIndex);
+        boolean is_night = world.isNight();
 
-        world.move(this, randomTile);
+        if (burrow != null && is_night) { // If the rabbit has a Burrow and it is night, move towards it.
+            Location burrow_location = world.getLocation(burrow);
 
-        Object grass_tile = world.getNonBlocking(randomTile);
-        if (grass_tile instanceof Grass) {
-            eat((Grass) grass_tile);
+            Location closest_tile = null;
+            int min_distance = Integer.MAX_VALUE;
+            for (Location tile : tiles) { // Find the closest tile towards the Burrow.
+                int dx = Math.abs(tile.getX() - burrow_location.getX());
+                int dy = Math.abs(tile.getY() - burrow_location.getY());
+                int distance = dx + dy;
+
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    closest_tile = tile;
+                }
+            }
+
+            if (closest_tile != null && closest_tile.equals(burrow_location)) { // When the Rabbit gets to its Borrow, sleep.
+                this.sleep(current_location);
+            } else if (closest_tile != null) { // Move the Rabbit towards its Burrow.
+                world.move(this, closest_tile);
+            }
+
+        } else {
+            int randomIndex = new Random().nextInt(tiles.size());
+            Location randomTile = tiles.get(randomIndex);
+            world.move(this, randomTile); // Move towards a random nerby tile.
+
+            if (!is_night) { // If it is night and the tile the rabbit wants to move to is Grass, eat it.
+                Object grass_tile = world.getNonBlocking(randomTile);
+                if (grass_tile instanceof Grass) {
+                    eat((Grass) grass_tile);
+                }
+            }
         }
     }
 
@@ -63,12 +138,16 @@ public class Rabbit implements Actor {
     }
 
     public void reproduce() {
+        if (sleeping_location != null) {
+            return;
+        }
+
         int min_reproduction_age = 5;
         if (age < min_reproduction_age) {
             return;
         }
 
-        int min_energy_required = 30;
+        int min_energy_required = 50;
         if (energy < min_energy_required) {
             return;
         }
@@ -82,6 +161,7 @@ public class Rabbit implements Actor {
             if (actor instanceof Rabbit) {
                 Rabbit potential_partner = (Rabbit) actor;
 
+                // Make sure the partner meets the requirements to have a baby as well.
                 if (potential_partner.getAge() >= min_reproduction_age && potential_partner.getEnergy() >= min_energy_required) {
                     partner = potential_partner;
                     break;
@@ -108,8 +188,8 @@ public class Rabbit implements Actor {
 
         world.setTile(baby_location, new Rabbit(world));
 
-        reduceEnergy();
-        partner.reduceEnergy();
+        reproductionEnergyCost();
+        partner.reproductionEnergyCost();
     }
 
     public int getAge() {
@@ -120,7 +200,28 @@ public class Rabbit implements Actor {
         return energy;
     }
 
-    public void reduceEnergy() {
-        energy = energy - 15;
+    public void reproductionEnergyCost() {
+        energy = energy - 30; // Energy cost to reproduce.
+    }
+
+    public void sleep(Location location) {
+        sleeping_location = location;
+        world.remove(this);
+    }
+
+    public void wakeUp() {
+        if (sleeping_location != null) {
+            if (world.isTileEmpty(sleeping_location)) {
+                world.setTile(sleeping_location, this);
+                sleeping_location = null;
+            } else {
+                Set<Location> nearby_tiles = world.getEmptySurroundingTiles(sleeping_location);
+                if (!nearby_tiles.isEmpty()) {
+                    Location wake_location = nearby_tiles.iterator().next();
+                    world.setTile(wake_location, this);
+                    sleeping_location = null;
+                }
+            }
+        }
     }
 }

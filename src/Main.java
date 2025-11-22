@@ -20,15 +20,15 @@ public class Main {
         String filename = args[0];
 
         boolean isTesting = false;
-        if (args.length == 2) {
+        if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
-        } // Use this boolean to avoid unnecesary stuff when running tests.
+        } // Use this boolean for test specific configuration.
 
         String folder_path = "src/data/week-1/"; // The folder where all the input files are stored.
         Scanner scanner = new Scanner(new File(folder_path + filename));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
-        int delay = isTesting ? 15 : 75;
+        int delay = isTesting ? 15 : 300;
 
         HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
@@ -70,8 +70,8 @@ public class Main {
         program.setDisplayInformation(Grass.class, GrassInfo);
         DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
         program.setDisplayInformation(Rabbit.class, RabbitInfo);
-        DisplayInformation RabbitHoleInfo = new DisplayInformation(Color.black, "RabbitHole");
-        program.setDisplayInformation(RabbitHole.class, RabbitHoleInfo);
+        DisplayInformation BurrowInfo = new DisplayInformation(Color.black, "RabbitHoleJava");
+        program.setDisplayInformation(Burrow.class, BurrowInfo);
 
         Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
@@ -83,8 +83,6 @@ public class Main {
                 int max = count.get("max");
                 amount = new Random().nextInt(max - min + 1) + min;
             }
-
-
 
             if (type.equals("grass")) {
                 for (int i = 0; i < amount; i = i + 1) {
@@ -99,6 +97,22 @@ public class Main {
                     }
 
                     world.setTile(location, new Grass());
+                }
+            }
+
+            if (type.equals("burrow")) {
+                for (int i = 0; i < amount; i = i + 1) {
+                    int x = rand.nextInt(size);
+                    int y = rand.nextInt(size);
+                    Location location = new Location(x, y);
+
+                    while (world.containsNonBlocking(location)) {
+                        x = rand.nextInt(size);
+                        y = rand.nextInt(size);
+                        location = new Location(x, y);
+                    }
+
+                    world.setTile(location, new Burrow());
                 }
             }
 
