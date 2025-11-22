@@ -8,12 +8,12 @@ public class TestSuper {
     public boolean rabbit_can_die;
 
     public void setUp(String filename) throws FileNotFoundException {
-        Main.main(new String[]{filename, "true"});
-        world = Main.getWorld();
+        Main.main(new String[]{filename, "true"}); //We pass the filename to load the map
+        world = Main.getWorld(); //Retrieves the World instance created by Main
     }
 
     @AfterEach
     void tearDown() {
-        world = null; //Resets the world, to prevent data or state from test
+        world = null; //Resets the world, to prevent data or state from test affecting next test
     }
 }
