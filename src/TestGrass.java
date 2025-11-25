@@ -8,28 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestGrass extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
-        String filename = "t1-1a.txt";  // File that contains grass
-        setUp(filename); // Initialize the world and run the simulation
-
-        // Retrieves a map of all actors and locations currently in the world
-        Map<Object, Location> entities = world.getEntities();
-        boolean world_contains_grass = false;
-
-        // Iterate through every entity in the world to check type
-        for (Object entity : entities.keySet()) {
-            if (entity instanceof Grass) {
-                world_contains_grass = true;
-                break; // We found grass, so we can stop searching
-            }
-        }
-
-        assertTrue(world_contains_grass); // Assert true if we found at least one Grass object, fails otherwise
+        setUp();
+        testInitialization(new Grass(), Grass.class);
     }
 
     @Test
     public void spreads() throws FileNotFoundException {
-        String filename = "t1-1b.txt";
-        setUp(filename);
+        setUp("src/data/week-1/t1-1b.txt");
 
         int grass_entities_in_file = 1; // The input file contains 1 grass
 

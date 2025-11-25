@@ -14,19 +14,17 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
         if (args.length == 0) {
-            System.out.println("Please provide input filename.");
+            System.out.println("Please provide input file path.");
             return;
-        } // If the user does not provide the filename that Main will generate the world out of, notify him.
-        String filename = args[0];
+        } // If the user does not provide the file path that Main will generate the world out of, notify him.
+        String filepath = args[0];
 
         boolean isTesting = false;
-        String folder_path = "src/data/week-1/"; // The folder where all the input files are stored.
         if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
-            folder_path = "src/data/week-1-test/";
         } // Use this boolean for test specific configuration.
 
-        Scanner scanner = new Scanner(new File(folder_path + filename));
+        Scanner scanner = new Scanner(new File(filepath));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
         int delay = isTesting ? 15 : 300;
@@ -43,7 +41,7 @@ public class Main {
             String[] parts = line.split("\\s+");
 
             String type = parts[0];
-            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow")) {
+            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear")) {
                 throw new IllegalArgumentException("Invalid type: " + type);
             }
 
@@ -67,12 +65,18 @@ public class Main {
         Program program = new Program(size, display_size, delay);
         world = program.getWorld();
 
-        DisplayInformation GrassInfo = new DisplayInformation(Color.green, "GrassJava");
+        DisplayInformation GrassInfo = new DisplayInformation(Color.green, "custom-grass");
         program.setDisplayInformation(Grass.class, GrassInfo);
-        DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "RabbitJava");
+        DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "custom-rabbit");
         program.setDisplayInformation(Rabbit.class, RabbitInfo);
-        DisplayInformation BurrowInfo = new DisplayInformation(Color.black, "RabbitHoleJava");
+        DisplayInformation BurrowInfo = new DisplayInformation(Color.black, "custom-rabbit-hole");
         program.setDisplayInformation(Burrow.class, BurrowInfo);
+        DisplayInformation WolfInfo = new DisplayInformation(Color.darkGray, "custom-wolf");
+        program.setDisplayInformation(Wolf.class, WolfInfo);
+        DisplayInformation BearInfo = new DisplayInformation(Color.orange);
+        program.setDisplayInformation(Bear.class, BearInfo);
+        DisplayInformation BushInfo = new DisplayInformation(Color.green);
+        program.setDisplayInformation(Bush.class, BushInfo);
 
         Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
@@ -85,54 +89,7 @@ public class Main {
                 amount = new Random().nextInt(max - min + 1) + min;
             }
 
-            if (type.equals("grass")) {
-                for (int i = 0; i < amount; i = i + 1) {
-                    int x = rand.nextInt(size);
-                    int y = rand.nextInt(size);
-                    Location location = new Location(x, y);
-
-                    while (world.containsNonBlocking(location)) {
-                        x = rand.nextInt(size);
-                        y = rand.nextInt(size);
-                        location = new Location(x, y);
-                    }
-
-                    world.setTile(location, new Grass());
-                }
-            }
-
-            if (type.equals("burrow")) {
-                for (int i = 0; i < amount; i = i + 1) {
-                    int x = rand.nextInt(size);
-                    int y = rand.nextInt(size);
-                    Location location = new Location(x, y);
-
-                    while (world.containsNonBlocking(location)) {
-                        x = rand.nextInt(size);
-                        y = rand.nextInt(size);
-                        location = new Location(x, y);
-                    }
-
-                    world.setTile(location, new Burrow());
-                }
-            }
-
-            if (type.equals("rabbit")) {
-                for (int i = 0; i < amount; i++) {
-                    int x = rand.nextInt(size);
-                    int y = rand.nextInt(size);
-                    Location location = new Location(x, y);
-
-                    while (!world.isTileEmpty(location)) {
-                        x = rand.nextInt(size);
-                        y = rand.nextInt(size);
-                        location = new Location(x, y);
-                    }
-
-                    world.setTile(location, new Rabbit(world));
-                }
-            }
-
+            initialize(type, amount);
         }
 
         if (!isTesting) {
@@ -147,4 +104,52 @@ public class Main {
     public static World getWorld() {
         return world;
     }
+
+    private static void initialize(String type, int amount) {
+        Random rand = new Random();
+        int size = world.getSize();
+
+        for (int i = 0; i < amount; i++) {
+            int x = rand.nextInt(size);
+            int y = rand.nextInt(size);
+            Location location = new Location(x, y);
+
+            if (type.equals("grass") || type.equals("burrow")) {
+                while (world.containsNonBlocking(location)) {
+                    x = rand.nextInt(size);
+                    y = rand.nextInt(size);
+                    location = new Location(x, y);
+                }
+            } else {
+                while (!world.isTileEmpty(location)) {
+                    x = rand.nextInt(size);
+                    y = rand.nextInt(size);
+                    location = new Location(x, y);
+                }
+            }
+
+            Object entity;
+            switch (type) {
+                case "grass":
+                    entity = new Grass();
+                    break;
+                case "burrow":
+                    entity = new Burrow();
+                    break;
+                case "rabbit":
+                    entity = new Rabbit(world);
+                    break;
+                case "wolf":
+                    entity = new Wolf(world);
+                    break;
+                case "bear":
+                    entity = new Bear(world);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown entity type: " + type);
+            }
+            world.setTile(location, entity);
+        }
+    }
+
 }

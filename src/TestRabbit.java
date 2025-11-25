@@ -9,58 +9,13 @@ public class TestRabbit extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-
-        // Create a rabbit at a specific location
-        Location location = new Location(5, 5);
-        Rabbit rabbit = new Rabbit(world);
-        world.setTile(location, rabbit);
-
-        // Retrieves all entities currently in the world map
-        Map<Object, Location> entities = world.getEntities();
-        int number_of_rabbits_in_world = 0;
-
-        // Iterate through all entities to count how many are instances of Rabbit
-        for (Object entity : entities.keySet()) {
-            if (entity instanceof Rabbit) {
-                number_of_rabbits_in_world = number_of_rabbits_in_world + 1;
-            }
-        }
-        // Assert that exactly one rabbit exists in the world
-        assertEquals(1, number_of_rabbits_in_world);
+        testInitialization(new Rabbit(world), Rabbit.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-
-        // Create a rabbit at the center of the world
-        Location center = new Location(5, 5);
-        Rabbit rabbit = new Rabbit(world);
-        world.setTile(center, rabbit);
-
-        // Drain the rabbit's energy by calling reproductionEnergyCost multiple times
-        // Initial energy is 100, each call costs 30 energy
-        // 4 calls = 120 energy cost, which guarantees the rabbit dies
-        rabbit.reproductionEnergyCost();
-        rabbit.reproductionEnergyCost();
-        rabbit.reproductionEnergyCost();
-        rabbit.reproductionEnergyCost();
-
-        // Trigger the rabbit's act method to check if it dies due to low energy
-        rabbit.act(world);
-
-        // Check if any rabbits exist in the world
-        Map<Object, Location> entities = world.getEntities();
-        boolean hasRabbit = false;
-        for (Object entity : entities.keySet()) {
-            if (entity instanceof Rabbit) {
-                hasRabbit = true;
-                break;
-            }
-        }
-
-        // Assert that no rabbits remain (the rabbit died)
-        assertFalse(hasRabbit);
+        testDeath(new Rabbit(world), Rabbit.class);
     }
 
     @Test
