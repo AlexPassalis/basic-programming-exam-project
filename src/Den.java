@@ -1,4 +1,5 @@
-package PACKAGE_NAME;
+import itumulator.world.NonBlocking;
 
-public class Den {
+public class Den implements NonBlocking {
+
 }

@@ -109,6 +109,13 @@ public class Main {
         Random rand = new Random();
         int size = world.getSize();
 
+        // Create a single den for all wolves in this group
+        Den wolfDen = null;
+        Wolf alphaWolf = null;
+        if (type.equals("wolf")) {
+            wolfDen = new Den();
+        }
+
         for (int i = 0; i < amount; i++) {
             int x = rand.nextInt(size);
             int y = rand.nextInt(size);
@@ -140,14 +147,26 @@ public class Main {
                     entity = new Rabbit(world);
                     break;
                 case "wolf":
-                    entity = new Wolf(world);
+                    boolean isAlpha = i == 0;
+                    Wolf wolf = new Wolf(world, wolfDen, isAlpha);
+
+                    if (isAlpha) {
+                        alphaWolf = wolf;
+                    } else {
+                        // Set up the pack relationship
+                        wolf.setAlpha(alphaWolf);
+                        alphaWolf.addFollower(wolf);
+                    }
+
+                    entity = wolf;
                     break;
                 case "bear":
                     entity = new Bear(world);
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown entity type: " + type);
+                    throw new IllegalArgumentException("Invalid entity type: " + type);
             }
+
             world.setTile(location, entity);
         }
     }
