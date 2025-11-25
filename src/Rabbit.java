@@ -200,6 +200,15 @@ public class Rabbit implements Actor {
         return energy;
     }
 
+    // Setter methods for testing purposes
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setEnergy(double energy) {
+        this.energy = energy;
+    }
+
     public void reproductionEnergyCost() {
         energy = energy - 30; // Energy cost to reproduce.
     }

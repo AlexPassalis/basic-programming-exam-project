@@ -7,10 +7,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRabbit extends TestSuper {
     @Test
-    public void rabbit_gets_instantiated() throws FileNotFoundException {
-        String filename = "t1-2a.txt";
-        setUp(filename);
-        int number_of_rabbits_in_file = 1; // 1 rabbit from the file
+    public void gets_initialised() throws FileNotFoundException {
+        setUp();
+
+        // Create a rabbit at a specific location
+        Location location = new Location(5, 5);
+        Rabbit rabbit = new Rabbit(world);
+        world.setTile(location, rabbit);
 
         // Retrieves all entities currently in the world map
         Map<Object, Location> entities = world.getEntities();
@@ -22,26 +25,189 @@ public class TestRabbit extends TestSuper {
                 number_of_rabbits_in_world = number_of_rabbits_in_world + 1;
             }
         }
-        // Assert that the actual number of rabbits in the world matches the expected number
-        assertEquals(number_of_rabbits_in_file, number_of_rabbits_in_world);
+        // Assert that exactly one rabbit exists in the world
+        assertEquals(1, number_of_rabbits_in_world);
     }
 
     @Test
-    public void rabbit_can_die() throws FileNotFoundException {
-        String filename = "t1-2b.txt";
-        setUp(filename);
+    public void can_die() throws FileNotFoundException {
+        setUp();
 
-        boolean hasRabbit = false;
+        // Create a rabbit at the center of the world
+        Location center = new Location(5, 5);
+        Rabbit rabbit = new Rabbit(world);
+        world.setTile(center, rabbit);
+
+        // Drain the rabbit's energy by calling reproductionEnergyCost multiple times
+        // Initial energy is 100, each call costs 30 energy
+        // 4 calls = 120 energy cost, which guarantees the rabbit dies
+        rabbit.reproductionEnergyCost();
+        rabbit.reproductionEnergyCost();
+        rabbit.reproductionEnergyCost();
+        rabbit.reproductionEnergyCost();
+
+        // Trigger the rabbit's act method to check if it dies due to low energy
+        rabbit.act(world);
+
+        // Check if any rabbits exist in the world
         Map<Object, Location> entities = world.getEntities();
-
-        // Search the world to see if any rabbits survived the simulation
+        boolean hasRabbit = false;
         for (Object entity : entities.keySet()) {
             if (entity instanceof Rabbit) {
                 hasRabbit = true;
-                break; // If one rabbit is found, we stop searching
+                break;
             }
         }
-        // We assert false, because we expect 'hasRabbit' to be false
+
+        // Assert that no rabbits remain (the rabbit died)
         assertFalse(hasRabbit);
+    }
+
+    @Test
+    public void eats_grass() throws FileNotFoundException {
+        setUp();
+
+        // Create a rabbit and grass at adjacent locations
+        Location rabbit_location = new Location(5, 5);
+        Location grass_location = new Location(5, 6); // Adjacent to rabbit
+
+        Rabbit rabbit = new Rabbit(world);
+        Grass grass = new Grass();
+
+        world.setTile(rabbit_location, rabbit);
+        world.setTile(grass_location, grass);
+
+        // Record rabbit's initial energy
+        double initial_energy = rabbit.getEnergy();
+
+        // Make the rabbit eat the grass
+        rabbit.eat(grass);
+
+        // Verify rabbit's energy increased after eating
+        double energy_after_eating = rabbit.getEnergy();
+        assertTrue(energy_after_eating > initial_energy);
+
+        // Verify the grass was deleted from the world
+        Map<Object, Location> entities = world.getEntities();
+        boolean grass_exists = false;
+        for (Object entity : entities.keySet()) {
+            if (entity instanceof Grass) {
+                grass_exists = true;
+                break;
+            }
+        }
+        assertFalse(grass_exists);
+    }
+
+    @Test
+    public void age_determines_energy_loss() throws FileNotFoundException {
+        setUp();
+
+        // Create two rabbits with different ages to test age-energy relationship
+        Location location1 = new Location(5, 5);
+        Location location2 = new Location(7, 7);
+
+        Rabbit young_rabbit = new Rabbit(world);
+        Rabbit old_rabbit = new Rabbit(world);
+
+        world.setTile(location1, young_rabbit);
+        world.setTile(location2, old_rabbit);
+
+        // Set rabbits to different ages but same energy
+        young_rabbit.setAge(1);
+        young_rabbit.setEnergy(100);
+
+        old_rabbit.setAge(5);
+        old_rabbit.setEnergy(100);
+
+        // Record initial energies
+        double young_initial_energy = young_rabbit.getEnergy();
+        double old_initial_energy = old_rabbit.getEnergy();
+
+        // Let both rabbits act once
+        young_rabbit.act(world);
+        old_rabbit.act(world);
+
+        // Get energies after one act
+        double young_energy_after = young_rabbit.getEnergy();
+        double old_energy_after = old_rabbit.getEnergy();
+
+        // Calculate energy loss for each rabbit
+        double young_energy_loss = young_initial_energy - young_energy_after;
+        double old_energy_loss = old_initial_energy - old_energy_after;
+
+        // Expected energy loss: age * 1.25
+        // Young rabbit (age 1): 1 * 1.25 = 1.25
+        // Old rabbit (age 5): 5 * 1.25 = 6.25
+        assertEquals(1.25, young_energy_loss, 0.01);
+        assertEquals(6.25, old_energy_loss, 0.01);
+
+        // Verify that older rabbits lose MORE energy per act than younger rabbits
+        assertTrue(old_energy_loss > young_energy_loss);
+    }
+
+    @Test
+    public void can_reproduce() throws FileNotFoundException {
+        setUp();
+
+        // Create two rabbits next to each other
+        Location location1 = new Location(5, 5);
+        Location location2 = new Location(5, 6); // Adjacent to location1
+
+        Rabbit rabbit1 = new Rabbit(world);
+        Rabbit rabbit2 = new Rabbit(world);
+
+        world.setTile(location1, rabbit1);
+        world.setTile(location2, rabbit2);
+
+        // Set both rabbits to meet reproduction requirements (age >= 5, energy >= 50)
+        rabbit1.setAge(5);
+        rabbit1.setEnergy(100);
+        rabbit2.setAge(5);
+        rabbit2.setEnergy(100);
+
+        // Count rabbits before reproduction attempt
+        Map<Object, Location> entities_before = world.getEntities();
+        int rabbits_before = 0;
+        for (Object entity : entities_before.keySet()) {
+            if (entity instanceof Rabbit) {
+                rabbits_before++;
+            }
+        }
+        assertEquals(2, rabbits_before);
+
+        // Record initial energies
+        double rabbit1_initial_energy = rabbit1.getEnergy();
+        double rabbit2_initial_energy = rabbit2.getEnergy();
+
+        // Call reproduce on both rabbits until one successfully reproduces
+        // This accounts for the hashCode comparison in reproduce() that determines which rabbit can reproduce
+        boolean reproduction_happened = false;
+        int max_attempts = 10;
+        int attempts = 0;
+
+        while (!reproduction_happened && attempts < max_attempts) {
+            rabbit1.reproduce();
+            rabbit2.reproduce();
+            attempts++;
+
+            // Check if reproduction happened by seeing if energy decreased
+            if (rabbit1.getEnergy() < rabbit1_initial_energy - 25 ||
+                rabbit2.getEnergy() < rabbit2_initial_energy - 25) {
+                reproduction_happened = true;
+            }
+        }
+
+        // Count rabbits after reproduction
+        Map<Object, Location> entities_after = world.getEntities();
+        int rabbits_after = 0;
+        for (Object entity : entities_after.keySet()) {
+            if (entity instanceof Rabbit) {
+                rabbits_after++;
+            }
+        }
+
+        // Assert that exactly one new rabbit was born
+        assertEquals(rabbits_before + 1, rabbits_after);
     }
 }

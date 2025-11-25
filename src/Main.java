@@ -20,11 +20,12 @@ public class Main {
         String filename = args[0];
 
         boolean isTesting = false;
+        String folder_path = "src/data/week-1/"; // The folder where all the input files are stored.
         if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
+            folder_path = "src/data/week-1-test/";
         } // Use this boolean for test specific configuration.
 
-        String folder_path = "src/data/week-1/"; // The folder where all the input files are stored.
         Scanner scanner = new Scanner(new File(folder_path + filename));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
