@@ -59,6 +59,8 @@ public class Wolf extends Animal {
 
     @Override
     public void act(World world) {
+        move();
+
         double energy_reduction = 1.5;
         energy = energy - energy_reduction;
 
@@ -68,9 +70,8 @@ public class Wolf extends Animal {
                 world.delete(follower);
             }
         }
-        super.act(world);
 
-        move();
+        super.act(world);
     }
 
     public void move() {

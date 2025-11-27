@@ -14,7 +14,6 @@ public class Animal implements Actor {
     public void act(World world) {
         if (energy <= 0) {
             world.delete(this); // The animal dies when it does not have any energy left.
-            return;
         }
     }
 }
