@@ -21,11 +21,12 @@ public class Grass implements Actor, NonBlocking {
             return;
         }
 
-        Set<Location> neighbours = world.getSurroundingTiles(); // We find all the empty tiles around our grass.
+        Location grassLocation = world.getLocation(this);
+        Set<Location> neighbours = world.getSurroundingTiles(grassLocation); // We find all the empty tiles around our grass.
         List<Location> list = new ArrayList<>(); // We insert all the empty tiles into an ArrayList.
 
         for (Location neighbour : neighbours) {
-            if (!world.containsNonBlocking(neighbour)) {
+            if (!world.containsNonBlocking(neighbour) && world.isTileEmpty(neighbour)) {
                 list.add(neighbour);
             }
         }

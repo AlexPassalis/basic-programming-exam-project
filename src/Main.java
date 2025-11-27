@@ -130,17 +130,24 @@ public class Main {
             int y = rand.nextInt(size);
             Location location = new Location(x, y);
 
-            while (!world.isTileEmpty(location)) {
-                x = rand.nextInt(size);
-                y = rand.nextInt(size);
-                location = new Location(x, y);
+            if (type.equals("grass") || type.equals("burrow")) {
+                while (world.containsNonBlocking(location) || !world.isTileEmpty(location)) {
+                    x = rand.nextInt(size);
+                    y = rand.nextInt(size);
+                    location = new Location(x, y);
+                }
+            } else {
+                while (!world.isTileEmpty(location)) {
+                    x = rand.nextInt(size);
+                    y = rand.nextInt(size);
+                    location = new Location(x, y);
+                }
             }
 
             Object entity;
             switch (type) {
                 case "grass":
                     entity = new Grass();
-                    System.out.println("Placing grass at location: (" + location.getX() + ", " + location.getY() + ")");
                     break;
                 case "burrow":
                     entity = new Burrow();
@@ -154,12 +161,9 @@ public class Main {
 
                     if (isAlpha) {
                         alphaWolf = wolf;
-                        System.out.println("Placing ALPHA wolf at location: (" + location.getX() + ", " + location.getY() + ")");
                     } else {
-                        // Set up the pack relationship
                         wolf.setAlpha(alphaWolf);
                         alphaWolf.addFollower(wolf);
-                        System.out.println("Placing FOLLOWER wolf at location: (" + location.getX() + ", " + location.getY() + ")");
                     }
 
                     entity = wolf;
