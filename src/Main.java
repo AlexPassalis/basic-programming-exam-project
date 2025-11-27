@@ -63,11 +63,8 @@ public class Main {
             // Create unique key using type and line number
             String unique_key = type + "_" + line_number;
             data.put(unique_key, values);
-            System.out.println("Added to data: " + unique_key + " with values: " + values);
         }
         scanner.close();
-
-        System.out.println("Total entries in data HashMap: " + data.size());
 
         Program program = new Program(size, display_size, delay);
         world = program.getWorld();
@@ -96,7 +93,6 @@ public class Main {
                 amount = new Random().nextInt(max - min + 1) + min;
             }
 
-            System.out.println("Initializing: " + type + " with amount: " + amount);
             initialize(type, amount);
         }
 
@@ -122,7 +118,6 @@ public class Main {
         Wolf alphaWolf = null;
         if (type.equals("wolf")) {
             wolfDen = new Den();
-            System.out.println("Created new Den for wolf pack of size: " + amount);
         }
 
         for (int i = 0; i < amount; i++) {

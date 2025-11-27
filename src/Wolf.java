@@ -81,29 +81,77 @@ public class Wolf extends Animal {
     public void move() {
         Location current_location = world.getLocation(this);
 
-        // Only alpha wolves hunt rabbits
-        if (isAlpha && isHungry()) {
+        if (isAlpha) {
             Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 2);
 
+            Location closest_alpha_location = null;
+            int min_distance_alpha = Integer.MAX_VALUE;
+
             Location closest_rabbit_location = null;
-            int min_distance = Integer.MAX_VALUE;
+            int min_distance_rabbit = Integer.MAX_VALUE;
+
             for (Location location : surrounding_tiles) {
                 Object tile = world.getTile(location);
+
+                if (tile instanceof Wolf) {
+                    Wolf other_wolf = (Wolf) tile;
+                    if (other_wolf.isAlpha() && other_wolf != this) {
+                        int dx = Math.abs(location.getX() - current_location.getX());
+                        int dy = Math.abs(location.getY() - current_location.getY());
+                        int distance = dx + dy;
+
+                        if (distance < min_distance_alpha) {
+                            min_distance_alpha = distance;
+                            closest_alpha_location = location;
+                        }
+                    }
+                }
+
                 if (tile instanceof Rabbit) {
                     int dx = Math.abs(location.getX() - current_location.getX());
                     int dy = Math.abs(location.getY() - current_location.getY());
                     int distance = dx + dy;
 
-                    if (distance < min_distance) {
-                        min_distance = distance;
+                    if (distance < min_distance_rabbit) {
+                        min_distance_rabbit = distance;
                         closest_rabbit_location = location;
                     }
                 }
             }
 
-            if (closest_rabbit_location != null) {
+            if (!isHungry() && closest_alpha_location != null) {
+                // Check if alpha is on adjacent tile (can fight it)
+                if (min_distance_alpha == 1) {
+                    Wolf other_alpha = (Wolf) world.getTile(closest_alpha_location);
+                    fightAlpha(other_alpha);
+                    return;
+                }
+
+                // Move towards the other alpha
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile : empty_tiles) {
+                    int dx = Math.abs(tile.getX() - closest_alpha_location.getX());
+                    int dy = Math.abs(tile.getY() - closest_alpha_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+
+                if (best_tile != null) {
+                    world.move(this, best_tile);
+                    return;
+                }
+            }
+
+            if (isHungry() && closest_rabbit_location != null) {
                 // Check if rabbit is on adjacent tile (can eat it)
-                if (min_distance == 1) {
+                if (min_distance_rabbit == 1) {
                     Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
                     eatRabbit(rabbit);
                     return;
@@ -130,6 +178,8 @@ public class Wolf extends Animal {
                     return;
                 }
             }
+
+
         }
 
         Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location);
@@ -188,6 +238,20 @@ public class Wolf extends Animal {
     private boolean isHungry() {
         return energy < 50;
     }
+
+    private void fightAlpha(Wolf other_alpha) {
+        // The alpha with the least energy dies
+        if (this.energy < other_alpha.energy) {
+            world.delete(this);
+        } else if (other_alpha.energy < this.energy) {
+            world.delete(other_alpha);
+        } else {
+            // If both have equal energy, randomly choose one to die
+            if (Math.random() < 0.5) {
+                world.delete(this);
+            } else {
+                world.delete(other_alpha);
+            }
+        }
+    }
 }
-
-
