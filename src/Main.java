@@ -73,10 +73,12 @@ public class Main {
         program.setDisplayInformation(Burrow.class, BurrowInfo);
         DisplayInformation WolfInfo = new DisplayInformation(Color.darkGray, "custom-wolf");
         program.setDisplayInformation(Wolf.class, WolfInfo);
-        DisplayInformation BearInfo = new DisplayInformation(Color.orange);
+        DisplayInformation BearInfo = new DisplayInformation(Color.orange, "custom-bear");
         program.setDisplayInformation(Bear.class, BearInfo);
-        DisplayInformation BushInfo = new DisplayInformation(Color.green);
+        DisplayInformation BushInfo = new DisplayInformation(Color.green, "custom-bush");
         program.setDisplayInformation(Bush.class, BushInfo);
+        DisplayInformation BushBerryInfo = new DisplayInformation(Color.green, "custom-bush-berry");
+        program.setDisplayInformation(Bush.class, BushBerryInfo);
 
         Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
