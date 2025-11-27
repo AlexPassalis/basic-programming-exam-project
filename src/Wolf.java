@@ -17,6 +17,7 @@ public class Wolf extends Animal {
         this.isAlpha = false;
         this.followers = new ArrayList<>();
         this.alpha = null;
+
     }
 
     Wolf(World world, Den den, boolean isAlpha) {
@@ -58,12 +59,76 @@ public class Wolf extends Animal {
 
     @Override
     public void act(World world) {
+        // Followers die if their alpha is dead
+        if (!isAlpha) {
+            world.delete(this);
+            return;
+        }
+
         move();
-        super.act(world);
+
+        // Alpha wolves lose energy each turn
+        double energy_reduction = 2.5;
+        if (isAlpha) {
+            energy = energy - energy_reduction;
+            super.act(world);
+        }
     }
 
     public void move() {
         Location current_location = world.getLocation(this);
+
+        // Only alpha wolves hunt rabbits
+        if (isAlpha && isHungry()) {
+            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 2);
+
+            Location closest_rabbit_location = null;
+            int min_distance = Integer.MAX_VALUE;
+            for (Location location : surrounding_tiles) {
+                Object tile = world.getTile(location);
+                if (tile instanceof Rabbit) {
+                    int dx = Math.abs(location.getX() - current_location.getX());
+                    int dy = Math.abs(location.getY() - current_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < min_distance) {
+                        min_distance = distance;
+                        closest_rabbit_location = location;
+                    }
+                }
+            }
+
+            if (closest_rabbit_location != null) {
+                // Check if rabbit is on adjacent tile (can eat it)
+                if (min_distance == 1) {
+                    Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
+                    eatRabbit(rabbit);
+                    return;
+                }
+
+                // Move towards the rabbit
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile : empty_tiles) {
+                    int dx = Math.abs(tile.getX() - closest_rabbit_location.getX());
+                    int dy = Math.abs(tile.getY() - closest_rabbit_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+
+                if (best_tile != null) {
+                    world.move(this, best_tile);
+                    return;
+                }
+            }
+        }
+
         Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location);
 
         if (neighbour_empty_tiles.isEmpty()) {
@@ -111,4 +176,15 @@ public class Wolf extends Animal {
     public void setEnergy(double energy) {
         this.energy = energy;
     }
+
+    private void eatRabbit(Rabbit rabbit){
+        world.delete(rabbit);
+        energy = energy + 50;
+    }
+
+    private boolean isHungry() {
+        return energy < 50;
+    }
 }
+
+

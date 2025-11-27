@@ -32,8 +32,10 @@ public class Main {
         HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
         scanner.nextLine();
+        int line_number = 1; // Track line number (starting from 1 after the size line)
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
+            line_number = line_number + 1;
             if (line.isEmpty()) {
                 continue;
             }
@@ -58,9 +60,14 @@ public class Main {
                 values.put("min", Integer.parseInt(range[0]));
                 values.put("max", Integer.parseInt(range[1]));
             }
-            data.put(type, values);
+            // Create unique key using type and line number
+            String unique_key = type + "_" + line_number;
+            data.put(unique_key, values);
+            System.out.println("Added to data: " + unique_key + " with values: " + values);
         }
         scanner.close();
+
+        System.out.println("Total entries in data HashMap: " + data.size());
 
         Program program = new Program(size, display_size, delay);
         world = program.getWorld();
@@ -73,14 +80,14 @@ public class Main {
         program.setDisplayInformation(Burrow.class, BurrowInfo);
         DisplayInformation WolfInfo = new DisplayInformation(Color.darkGray, "custom-wolf");
         program.setDisplayInformation(Wolf.class, WolfInfo);
-        DisplayInformation BearInfo = new DisplayInformation(Color.orange);
+        DisplayInformation BearInfo = new DisplayInformation(Color.orange, "custom-bear");
         program.setDisplayInformation(Bear.class, BearInfo);
-        DisplayInformation BushInfo = new DisplayInformation(Color.green);
+        DisplayInformation BushInfo = new DisplayInformation(Color.green, "custom-bush-berries");
         program.setDisplayInformation(Bush.class, BushInfo);
 
-        Random rand = new Random();
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
-            String type = actor.getKey();
+            String unique_key = actor.getKey();
+            String type = unique_key.split("_")[0]; // Extract "wolf" from "wolf_2"
             HashMap<String, Integer> count = actor.getValue();
             int amount = count.get("count");
             if (amount == 0) {
@@ -89,6 +96,7 @@ public class Main {
                 amount = new Random().nextInt(max - min + 1) + min;
             }
 
+            System.out.println("Initializing: " + type + " with amount: " + amount);
             initialize(type, amount);
         }
 
@@ -114,6 +122,7 @@ public class Main {
         Wolf alphaWolf = null;
         if (type.equals("wolf")) {
             wolfDen = new Den();
+            System.out.println("Created new Den for wolf pack of size: " + amount);
         }
 
         for (int i = 0; i < amount; i++) {
@@ -121,24 +130,17 @@ public class Main {
             int y = rand.nextInt(size);
             Location location = new Location(x, y);
 
-            if (type.equals("grass") || type.equals("burrow")) {
-                while (world.containsNonBlocking(location)) {
-                    x = rand.nextInt(size);
-                    y = rand.nextInt(size);
-                    location = new Location(x, y);
-                }
-            } else {
-                while (!world.isTileEmpty(location)) {
-                    x = rand.nextInt(size);
-                    y = rand.nextInt(size);
-                    location = new Location(x, y);
-                }
+            while (!world.isTileEmpty(location)) {
+                x = rand.nextInt(size);
+                y = rand.nextInt(size);
+                location = new Location(x, y);
             }
 
             Object entity;
             switch (type) {
                 case "grass":
                     entity = new Grass();
+                    System.out.println("Placing grass at location: (" + location.getX() + ", " + location.getY() + ")");
                     break;
                 case "burrow":
                     entity = new Burrow();
@@ -152,10 +154,12 @@ public class Main {
 
                     if (isAlpha) {
                         alphaWolf = wolf;
+                        System.out.println("Placing ALPHA wolf at location: (" + location.getX() + ", " + location.getY() + ")");
                     } else {
                         // Set up the pack relationship
                         wolf.setAlpha(alphaWolf);
                         alphaWolf.addFollower(wolf);
+                        System.out.println("Placing FOLLOWER wolf at location: (" + location.getX() + ", " + location.getY() + ")");
                     }
 
                     entity = wolf;
