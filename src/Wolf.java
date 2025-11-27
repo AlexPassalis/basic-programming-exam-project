@@ -59,23 +59,16 @@ public class Wolf extends Animal {
 
     @Override
     public void act(World world) {
-        if (isAlpha) {
-            // Alpha wolves lose energy each turn
-            double energy_reduction = 1.5;
-            energy = energy - energy_reduction;
-            super.act(world);
+        double energy_reduction = 1.5;
+        energy = energy - energy_reduction;
 
-            // If alpha died from energy loss, don't move
-            if (energy <= 0) {
-                return;
-            }
-        } else {
-            // Followers die if their alpha is dead
-            if (alpha == null || !world.isOnTile(alpha)) {
-                world.delete(this);
-                return;
+        // If the alpha is about to die, delete all its followers first
+        if (energy <= 0 && isAlpha && followers != null) {
+            for (Wolf follower : new ArrayList<>(followers)) {
+                world.delete(follower);
             }
         }
+        super.act(world);
 
         move();
     }
