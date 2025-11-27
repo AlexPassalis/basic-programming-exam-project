@@ -67,7 +67,11 @@ public class Wolf extends Animal {
         // If the alpha is about to die, delete all its followers first
         if (isAlpha && energy <= 0 && followers != null) {
             for (Wolf wolf : followers) {
-                world.delete(wolf);
+                try {
+                    world.delete(wolf);
+                } catch (IllegalArgumentException e) {
+                    // Wolf was already deleted from the world, skip it
+                }
             }
         }
 
