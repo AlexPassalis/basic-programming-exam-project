@@ -65,9 +65,9 @@ public class Wolf extends Animal {
         energy = energy - energy_reduction;
 
         // If the alpha is about to die, delete all its followers first
-        if (energy <= 0 && isAlpha && followers != null) {
-            for (Wolf follower : new ArrayList<>(followers)) {
-                world.delete(follower);
+        if (isAlpha && energy <= 0 && followers != null) {
+            for (Wolf wolf : followers) {
+                world.delete(wolf);
             }
         }
 
