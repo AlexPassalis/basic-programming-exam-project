@@ -29,7 +29,7 @@ public class Main {
         int display_size = 800;
         int delay = isTesting ? 15 : 300;
 
-        HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
+        List<Pair<String, HashMap<String, Integer>>> data = new ArrayList<>(); // The HashMap containing the info from the input file.
 
         scanner.nextLine();
         int line_number = 1; // Track line number (starting from 1 after the size line)
@@ -61,8 +61,8 @@ public class Main {
                 values.put("max", Integer.parseInt(range[1]));
             }
             // Create unique key using type and line number
-            String unique_key = type + "_" + line_number;
-            data.put(unique_key, values);
+
+            data.add(new Pair<>(type, values));
         }
         scanner.close();
 
@@ -81,10 +81,11 @@ public class Main {
         program.setDisplayInformation(Bear.class, BearInfo);
         DisplayInformation BushInfo = new DisplayInformation(Color.green, "custom-bush-berries");
         program.setDisplayInformation(Bush.class, BushInfo);
+        DisplayInformation DenInfo = new DisplayInformation(Color.lightGray, "custom-den");
+        program.setDisplayInformation(Den.class, DenInfo);
 
-        for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
-            String unique_key = actor.getKey();
-            String type = unique_key.split("_")[0]; // Extract "wolf" from "wolf_2"
+        for (Pair<String, HashMap<String, Integer>> actor : data) {
+            String type = actor.getKey();
             HashMap<String, Integer> count = actor.getValue();
             int amount = count.get("count");
             if (amount == 0) {
@@ -99,9 +100,39 @@ public class Main {
         if (!isTesting) {
             program.show();
         }
+        try {
+            System.out.println("Initial entity count (world.getEntities().size()): " + world.getEntities().size());
+            // optional: print breakdown by class
+            Map<String, Integer> breakdown = new HashMap<>();
+            for (Object entity : world.getEntities().keySet()) {
+                String key = entity.getClass().getSimpleName();
+                breakdown.put(key, breakdown.getOrDefault(key, 0) + 1);
+            }
+            System.out.println("Entity breakdown: " + breakdown);
+        } catch (Throwable t) {
+            System.err.println("Could not print entity summary: " + t.getMessage());
+        }
+        int steps = 200;
+        for (int i = 0; i < steps; i++) {
+            try {// runs the program with 200 simulations
+                program.simulate();
+            } catch (Throwable t) {
+                System.err.println("Exception thrown during program.simulate() at step " + i + ": " + t.getMessage());
+                t.printStackTrace();
+                try {
+                    System.err.println("World entities at crash: " + world.getEntities().size());
+                } catch (Throwable t2) {
+                    System.err.println("Couldnt read world entities: " + t2.getMessage());
+                }
+                break;
 
-        for (int i = 0; i < 200; i++) { // runs the program with 200 simulations
-            program.simulate();
+            }
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
     }
 
@@ -114,11 +145,39 @@ public class Main {
         int size = world.getSize();
 
         // Create a single den for all wolves in this group
-        Den wolfDen = null;
-        Wolf alphaWolf = null;
+
         if (type.equals("wolf")) {
-            wolfDen = new Den();
-        }
+            Den wolfDen = new Den();
+            List<Wolf> pack = new ArrayList<>();
+            Wolf alphaWolf = null;
+            for (int i = 0; i < amount; i++) {
+                Wolf wolf = new Wolf(world, wolfDen, i == 0);
+                pack.add(wolf);
+                if (i == 0) alphaWolf = wolf;
+            }
+            for (Wolf wolf : pack) {
+                int x, y;
+                Location loc;
+                do {
+                    // while (!world.isTileEmpty(location)) {
+                    x = rand.nextInt(size);
+                    y = rand.nextInt(size);
+                    loc = new Location(x, y);
+                } while (!world.isTileEmpty(loc));
+                world.setTile(loc, wolf);
+            }
+            for (Wolf wolf : pack) {
+                if (!wolf.isAlpha()) {
+                    wolf.setAlpha(alphaWolf);
+                    alphaWolf.addFollower(wolf);
+                }
+            }
+
+            return;
+
+            }
+
+
 
         for (int i = 0; i < amount; i++) {
             int x = rand.nextInt(size);
@@ -149,19 +208,6 @@ public class Main {
                     break;
                 case "rabbit":
                     entity = new Rabbit(world);
-                    break;
-                case "wolf":
-                    boolean isAlpha = i == 0;
-                    Wolf wolf = new Wolf(world, wolfDen, isAlpha);
-
-                    if (isAlpha) {
-                        alphaWolf = wolf;
-                    } else {
-                        wolf.setAlpha(alphaWolf);
-                        alphaWolf.addFollower(wolf);
-                    }
-
-                    entity = wolf;
                     break;
                 case "bear":
                     entity = new Bear(world);
