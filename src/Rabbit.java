@@ -1,20 +1,27 @@
-import java.util.Random;
+import itumulator.simulator.Actor;
 import itumulator.world.World;
+import java.util.Random;
 import java.util.ArrayList;
 import itumulator.world.Location;
 import java.util.List;
 import java.util.Set;
 import java.util.*;
 
-public class Rabbit extends Animal {
+public class Rabbit implements Actor {
+    private World world;
     private int age;
+    private double energy;
     private Burrow burrow;
     private Location sleeping_location;
     private int simulation_counts;
 
     Rabbit(World world) {
-        super(world, 100);
+        this.world = world;
         age = 0;
+        energy = 100;
+        burrow = null;
+        sleeping_location = null;
+        simulation_counts = 0;
     }
 
     private Burrow getClosestBurrow() {
@@ -51,7 +58,6 @@ public class Rabbit extends Animal {
 
     @Override
     public void act(World world) {
-        simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
         if (simulation_counts == 1) {
             burrow = getClosestBurrow(); // Attach the closest borrow to the rabbit.
         }
@@ -72,11 +78,15 @@ public class Rabbit extends Animal {
             energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
         }
 
+        if (energy <= 0) {
+            world.delete(this); // The rabbit dies when it does not have any energy left.
+        }
+
+        simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
+
         if (simulation_counts % 10 == 0) { // Age the rabbit by 1 year every 10 program simulations.
             age = age + 1;
         }
-
-        super.act(world); // Call parent's act method to check for death
     }
 
     public void move() {

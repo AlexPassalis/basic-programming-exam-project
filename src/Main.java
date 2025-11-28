@@ -24,6 +24,7 @@ public class Main {
             isTesting = Boolean.parseBoolean(args[1]);
         } // Use this boolean for test specific configuration.
 
+
         Scanner scanner = new Scanner(new File(filepath));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
@@ -77,6 +78,8 @@ public class Main {
         program.setDisplayInformation(Burrow.class, BurrowInfo);
         DisplayInformation WolfInfo = new DisplayInformation(Color.darkGray, "custom-wolf");
         program.setDisplayInformation(Wolf.class, WolfInfo);
+        DisplayInformation DenInfo = new DisplayInformation(Color.red, "custom-den");
+        program.setDisplayInformation(Den.class, DenInfo);
         DisplayInformation BearInfo = new DisplayInformation(Color.orange, "custom-bear");
         program.setDisplayInformation(Bear.class, BearInfo);
         DisplayInformation BushInfo = new DisplayInformation(Color.green, "custom-bush-berries");
@@ -100,44 +103,19 @@ public class Main {
             program.show();
         }
 
-        for (int i = 0; i < 200; i++) { // runs the program with 200 simulations
+        int simulations_count = 200;
+        for (int i = 0; i < simulations_count; i++) {
             program.simulate();
         }
     }
 
-    public static World getWorld() {
-        return world;
-    }
-
     private static void initialize(String type, int amount) {
-        Random rand = new Random();
-        int size = world.getSize();
-
         // Create a single den for all wolves in this group
-        Den wolfDen = null;
-        Wolf alphaWolf = null;
-        if (type.equals("wolf")) {
-            wolfDen = new Den();
-        }
+        Den wolf_den = null;
+        Wolf alpha_wolf = null;
 
-        for (int i = 0; i < amount; i++) {
-            int x = rand.nextInt(size);
-            int y = rand.nextInt(size);
-            Location location = new Location(x, y);
-
-            if (type.equals("grass") || type.equals("burrow")) {
-                while (world.containsNonBlocking(location) || !world.isTileEmpty(location)) {
-                    x = rand.nextInt(size);
-                    y = rand.nextInt(size);
-                    location = new Location(x, y);
-                }
-            } else {
-                while (!world.isTileEmpty(location)) {
-                    x = rand.nextInt(size);
-                    y = rand.nextInt(size);
-                    location = new Location(x, y);
-                }
-            }
+        for (int i = 0; i < amount; i = i + 1) {
+            Location location = type.equals("grass") || type.equals("burrow") ? getEmptyNonBlockingLocation() : getEmptyLocation();
 
             Object entity;
             switch (type) {
@@ -152,16 +130,18 @@ public class Main {
                     break;
                 case "wolf":
                     boolean isAlpha = i == 0;
-                    Wolf wolf = new Wolf(world, wolfDen, isAlpha);
-
                     if (isAlpha) {
-                        alphaWolf = wolf;
-                    } else {
-                        wolf.setAlpha(alphaWolf);
-                        alphaWolf.addFollower(wolf);
-                    }
+                        Location den_location = getEmptyNonBlockingLocation();
+                        wolf_den = new Den();
+                        world.setTile(den_location, wolf_den);
 
-                    entity = wolf;
+                        alpha_wolf = new Wolf(world, wolf_den);
+                        entity = alpha_wolf;
+                    } else {
+                        Wolf nonAlfaWolf = new Wolf(world, wolf_den, alpha_wolf);
+                        alpha_wolf.addFollower(nonAlfaWolf);
+                        entity = nonAlfaWolf;
+                    }
                     break;
                 case "bear":
                     entity = new Bear(world);
@@ -174,4 +154,41 @@ public class Main {
         }
     }
 
+    private static Location getEmptyLocation( ) {
+        Random randon_number = new Random();
+        int size = world.getSize();
+
+        int x = randon_number.nextInt(size);
+        int y = randon_number.nextInt(size);
+        Location location = new Location(x, y);
+
+        while (!world.isTileEmpty(location)) {
+            x = randon_number.nextInt(size);
+            y = randon_number.nextInt(size);
+            location = new Location(x, y);
+        }
+
+        return location;
+    }
+
+    private static Location getEmptyNonBlockingLocation() {
+        Random randon_number = new Random();
+        int size = world.getSize();
+
+        int x = randon_number.nextInt(size);
+        int y = randon_number.nextInt(size);
+        Location location = new Location(x, y);
+
+        while (world.containsNonBlocking(location)) {
+            x = randon_number.nextInt(size);
+            y = randon_number.nextInt(size);
+            location = new Location(x, y);
+        }
+
+        return location;
+    }
+
+    public static World getWorld() {
+        return world;
+    }
 }

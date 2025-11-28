@@ -1,3 +1,4 @@
+import itumulator.simulator.Actor;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -5,32 +6,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.Random;
 
-public class Wolf extends Animal {
-    Den den;
-    boolean isAlpha;
-    List<Wolf> followers; // For alpha wolves
-    Wolf alpha; // For follower wolves
+public class Wolf implements Actor {
+    private World world;
+    private Den den;
+    private boolean isAlpha;
+    private double energy; // Only Alfa wolves have energy
+    private List<Wolf> followers; // For alpha wolves
+    private Wolf alpha; // For non-alfa wolves
 
-    Wolf(World world, Den den) {
-        super(world, 100);
+    Wolf(World world, Den den, Wolf alpha) {
+        this.world = world;
         this.den = den;
         this.isAlpha = false;
-        this.followers = new ArrayList<>();
-        this.alpha = null;
-
+        this.energy = 0;
+        this.alpha = alpha;
+        this.followers = null;
     }
 
-    Wolf(World world, Den den, boolean isAlpha) {
-        super(world, 100);
+    Wolf(World world, Den den) {
+        this.world = world;
         this.den = den;
-        this.isAlpha = isAlpha;
-        if (isAlpha) {
-            this.followers = new ArrayList<>();
-            this.alpha = null;
-        } else {
-            this.followers = null;
-            this.alpha = null;
-        }
+        this.isAlpha = true;
+        this.energy = 100;
+        this.followers = new ArrayList<>();
     }
 
     public boolean isAlpha() {
@@ -61,11 +59,15 @@ public class Wolf extends Animal {
     public void act(World world) {
         move();
 
-        double energy_reduction = 1.5;
+        if (!isAlpha) {
+            return;
+        }
+
+        int energy_reduction = 2;
         energy = energy - energy_reduction;
 
         // If the alpha is about to die, delete all its followers first
-        if (isAlpha && energy <= 0 && followers != null) {
+        if (energy <= 0 && followers != null) {
             for (Wolf wolf : followers) {
                 try {
                     world.delete(wolf);
@@ -75,7 +77,9 @@ public class Wolf extends Animal {
             }
         }
 
-        super.act(world);
+        if (energy <= 0) {
+            world.delete(this); // The wolf dies when it does not have any energy left.
+        }
     }
 
     public void move() {
@@ -197,27 +201,34 @@ public class Wolf extends Animal {
             world.move(this, randomTile);
         } else {
             // Follower moves towards alpha
-            if (alpha != null && world.isOnTile(alpha)) {
-                Location alpha_location = world.getLocation(alpha);
+            try {
+                if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
+                    Location alpha_location = world.getLocation(alpha);
 
-                Location closest_tile = null;
-                int min_distance = Integer.MAX_VALUE;
-                for (Location tile : tiles) {
-                    int dx = Math.abs(tile.getX() - alpha_location.getX());
-                    int dy = Math.abs(tile.getY() - alpha_location.getY());
-                    int distance = dx + dy;
+                    Location closest_tile = null;
+                    int min_distance = Integer.MAX_VALUE;
+                    for (Location tile : tiles) {
+                        int dx = Math.abs(tile.getX() - alpha_location.getX());
+                        int dy = Math.abs(tile.getY() - alpha_location.getY());
+                        int distance = dx + dy;
 
-                    if (distance < min_distance) {
-                        min_distance = distance;
-                        closest_tile = tile;
+                        if (distance < min_distance) {
+                            min_distance = distance;
+                            closest_tile = tile;
+                        }
                     }
-                }
 
-                if (closest_tile != null) {
-                    world.move(this, closest_tile);
+                    if (closest_tile != null) {
+                        world.move(this, closest_tile);
+                    }
+                } else {
+                    // If no alpha or alpha not on tile, move randomly
+                    int randomIndex = new Random().nextInt(tiles.size());
+                    Location randomTile = tiles.get(randomIndex);
+                    world.move(this, randomTile);
                 }
-            } else {
-                // If no alpha or alpha not on tile, move randomly
+            } catch (IllegalArgumentException e) {
+                // Alpha doesn't exist in world, move randomly
                 int randomIndex = new Random().nextInt(tiles.size());
                 Location randomTile = tiles.get(randomIndex);
                 world.move(this, randomTile);
@@ -242,14 +253,46 @@ public class Wolf extends Animal {
     private void fightAlpha(Wolf other_alpha) {
         // The alpha with the least energy dies
         if (this.energy < other_alpha.energy) {
+            // Transfer this alpha's followers to the other alpha
+            if (this.followers != null) {
+                for (Wolf follower : this.followers) {
+                    follower.setAlpha(other_alpha);
+                    other_alpha.addFollower(follower);
+                }
+                this.followers.clear();
+            }
             world.delete(this);
         } else if (other_alpha.energy < this.energy) {
+            // Transfer other alpha's followers to this alpha
+            if (other_alpha.followers != null) {
+                for (Wolf follower : other_alpha.followers) {
+                    follower.setAlpha(this);
+                    this.addFollower(follower);
+                }
+                other_alpha.followers.clear();
+            }
             world.delete(other_alpha);
         } else {
             // If both have equal energy, randomly choose one to die
             if (Math.random() < 0.5) {
+                // Transfer this alpha's followers to the other alpha
+                if (this.followers != null) {
+                    for (Wolf follower : this.followers) {
+                        follower.setAlpha(other_alpha);
+                        other_alpha.addFollower(follower);
+                    }
+                    this.followers.clear();
+                }
                 world.delete(this);
             } else {
+                // Transfer other alpha's followers to this alpha
+                if (other_alpha.followers != null) {
+                    for (Wolf follower : other_alpha.followers) {
+                        follower.setAlpha(this);
+                        this.addFollower(follower);
+                    }
+                    other_alpha.followers.clear();
+                }
                 world.delete(other_alpha);
             }
         }

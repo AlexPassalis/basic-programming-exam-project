@@ -1,7 +1,15 @@
+import itumulator.simulator.Actor;
 import itumulator.world.World;
 
-public class Bear extends Animal {
+public class Bear implements Actor {
+    private World world;
+
     Bear(World world) {
-        super(world, 100);
+        this.world = world;
+    }
+
+    @Override
+    public void act(World world) {
+
     }
 }

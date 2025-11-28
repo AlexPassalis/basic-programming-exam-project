@@ -1,3 +1,4 @@
+import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
 import org.junit.jupiter.api.AfterEach;
@@ -49,20 +50,20 @@ public class TestSuper {
     }
 
     // Helper method to test if an animal dies when energy reaches 0
-    protected void testDeath(Animal animal, Class<?> animalClass) {
+    protected void testDeath(Actor actor, Class<?> animalClass) {
         // Create the animal at the center of the world
         Location center = new Location(5, 5);
-        world.setTile(center, animal);
+        world.setTile(center, actor);
 
-        // Set the animal's energy to 0 to trigger death
-        if (animal instanceof Rabbit) {
-            ((Rabbit) animal).setEnergy(0);
-        } else if (animal instanceof Wolf) {
-            ((Wolf) animal).setEnergy(0);
+        // Set the actor's energy to 0 to trigger death
+        if (actor instanceof Rabbit) {
+            ((Rabbit) actor).setEnergy(0);
+        } else if (actor instanceof Wolf) {
+            ((Wolf) actor).setEnergy(0);
         }
 
-        // Trigger the animal's act method to check if it dies due to no energy
-        animal.act(world);
+        // Trigger the actor's act method to check if it dies due to no energy
+        actor.act(world);
 
         // Check if any animals of this type exist in the world
         Map<Object, Location> entities = world.getEntities();
