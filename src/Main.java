@@ -106,6 +106,12 @@ public class Main {
         int simulations_count = 200;
         for (int i = 0; i < simulations_count; i++) {
             program.simulate();
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
     }
 
