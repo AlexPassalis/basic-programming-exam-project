@@ -24,13 +24,11 @@ public class Wolf extends Animal {
         super(world, 100);
         this.den = den;
         this.isAlpha = isAlpha;
-        if (isAlpha) {
-            this.followers = new ArrayList<>();
-            this.alpha = null;
-        } else {
-            this.followers = null;
-            this.alpha = null;
-        }
+        this.followers = new ArrayList<>();
+        this.alpha = null;
+
+
+
     }
 
     public boolean isAlpha() {
@@ -38,7 +36,7 @@ public class Wolf extends Animal {
     }
 
     public void addFollower(Wolf wolf) {
-        if (isAlpha && !followers.contains(wolf)) {
+        if (isAlpha && followers != null && !followers.contains(wolf)) {
             followers.add(wolf);
         }
     }
@@ -59,22 +57,73 @@ public class Wolf extends Animal {
 
     @Override
     public void act(World world) {
-        move();
+        // clear it early to avoid later calls into world with a removed object.
+        if (!isAlpha && alpha != null) {
+            try {
+                if (world.getLocation(alpha) == null) {
+                    alpha = null;
+                }
+            } catch (Exception e) {
+                // In case world.getLocation throws for a removed object, clear reference.
+                alpha = null;
+            }
+        }
+        // **** FIX END ****
+
+        // **** FIX START: surround risky move() with a try/catch so a single bad access
+        // does not silently corrupt the world or the UI. We log and attempt minimal recovery.
+        try {
+            move();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Wolf.act: caught IllegalArgumentException during move(): " + e.getMessage());
+            e.printStackTrace();
+
+            // Attempt a simple recovery: clear alpha reference (common root cause),
+            // and clear followers if this wolf is alpha and is being removed soon.
+            try {
+                if (alpha != null && world.getLocation(alpha) == null) {
+                    alpha = null;
+                }
+            } catch (Exception ignored) {}
+
+            // If this wolf is alpha and about to die, make sure followers don't keep referencing it.
+            if (isAlpha && followers != null) {
+                for (Wolf w : followers) {
+                    try { w.alpha = null; } catch (Exception ignored) {}
+                }
+            }
+
+            // Stop further actions for this tick.
+            return;
+        }
 
         double energy_reduction = 1.5;
         energy = energy - energy_reduction;
 
         // If the alpha is about to die, delete all its followers first
         if (isAlpha && energy <= 0 && followers != null) {
-            for (Wolf wolf : followers) {
-                try {
-                    world.delete(wolf);
-                } catch (IllegalArgumentException e) {
-                    // Wolf was already deleted from the world, skip it
+            if (!followers.isEmpty()) {
+                for (Wolf wolf : followers) {
+                    wolf.alpha = null;
+                    try {
+                        wolf.alpha = null;
+                        world.delete(wolf);
+                    } catch (Exception ignored) {
+                        // Wolf was already deleted from the world, skip it
+                    }
                 }
+                followers.clear();
             }
         }
-
+        for (Wolf wolf: followers) {
+            try {
+                world.delete(wolf);
+            } catch (IllegalArgumentException e) {
+            }
+        }
+        try {
+            followers.clear();
+        } catch (Exception ignored) {}
         super.act(world);
     }
 
@@ -197,34 +246,42 @@ public class Wolf extends Animal {
             world.move(this, randomTile);
         } else {
             // Follower moves towards alpha
-            if (alpha != null && world.isOnTile(alpha)) {
-                Location alpha_location = world.getLocation(alpha);
+            if (alpha != null) {
+                Location alpha_location = null;
+                try {
+                    alpha_location = world.getLocation(alpha);
+                } catch (Exception e) {
+                    alpha_location = null;
+                }
+                if (alpha_location != null) {
+                    Location closest_tile = null;
+                    int min_distance = Integer.MAX_VALUE;
+                    for (Location tile : tiles) {
+                        int dx = Math.abs(tile.getX() - alpha_location.getX());
+                        int dy = Math.abs(tile.getY() - alpha_location.getY());
+                        int distance = dx + dy;
 
-                Location closest_tile = null;
-                int min_distance = Integer.MAX_VALUE;
-                for (Location tile : tiles) {
-                    int dx = Math.abs(tile.getX() - alpha_location.getX());
-                    int dy = Math.abs(tile.getY() - alpha_location.getY());
-                    int distance = dx + dy;
-
-                    if (distance < min_distance) {
-                        min_distance = distance;
-                        closest_tile = tile;
+                        if (distance < min_distance) {
+                            min_distance = distance;
+                            closest_tile = tile;
+                        }
                     }
-                }
 
-                if (closest_tile != null) {
-                    world.move(this, closest_tile);
+                    if (closest_tile != null) {
+                        world.move(this, closest_tile);
+                        return;
+                    }
+                } else {
+                    alpha = null;
+                    // If no alpha or alpha not on tile, move randomly
+
                 }
-            } else {
-                // If no alpha or alpha not on tile, move randomly
-                int randomIndex = new Random().nextInt(tiles.size());
-                Location randomTile = tiles.get(randomIndex);
-                world.move(this, randomTile);
             }
+            int randomIndex = new Random().nextInt(tiles.size());
+            Location randomTile = tiles.get(randomIndex);
+            world.move(this, randomTile);
         }
     }
-
     // Setter method for testing purposes
     public void setEnergy(double energy) {
         this.energy = energy;
