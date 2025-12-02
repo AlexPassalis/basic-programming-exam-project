@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.*;
 
 public class Main {
+    public static Program program;
     public static World world;
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -44,7 +45,7 @@ public class Main {
             String[] parts = line.split("\\s+");
 
             String type = parts[0];
-            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear")) {
+            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear") && !type.equals("berry")) {
                 throw new IllegalArgumentException("Invalid type: " + type);
             }
 
@@ -77,7 +78,7 @@ public class Main {
         }
         scanner.close();
 
-        Program program = new Program(size, display_size, delay);
+        program = new Program(size, display_size, delay);
         world = program.getWorld();
 
         DisplayInformation GrassInfo = new DisplayInformation(Color.green, "custom-grass");
@@ -92,8 +93,8 @@ public class Main {
         program.setDisplayInformation(Den.class, DenInfo);
         DisplayInformation BearInfo = new DisplayInformation(Color.orange, "custom-bear");
         program.setDisplayInformation(Bear.class, BearInfo);
-        DisplayInformation BushInfo = new DisplayInformation(Color.green, "custom-bush-berries");
-        program.setDisplayInformation(Bush.class, BushInfo);
+        DisplayInformation BerryInfo = new DisplayInformation(Color.green, "custom-bush");
+        program.setDisplayInformation(Berry.class, BerryInfo);
 
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String unique_key = actor.getKey();
@@ -142,7 +143,7 @@ public class Main {
             if (spawn_location != null) {
                 location = spawn_location;
             } else {
-                location = type.equals("grass") || type.equals("burrow") ? getEmptyNonBlockingLocation() : getEmptyLocation();
+                location = type.equals("grass") || type.equals("burrow") || type.equals("berry") ? getEmptyNonBlockingLocation() : getEmptyLocation();
             }
 
             Object entity;
@@ -173,6 +174,9 @@ public class Main {
                     break;
                 case "bear":
                     entity = new Bear(world, location);
+                    break;
+                case "berry":
+                    entity = new Berry(program);
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid entity type: " + type);
@@ -214,6 +218,10 @@ public class Main {
         }
 
         return location;
+    }
+
+    public static Program getProgram() {
+        return program;
     }
 
     public static World getWorld() {

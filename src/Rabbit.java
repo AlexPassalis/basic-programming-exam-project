@@ -79,7 +79,7 @@ public class Rabbit implements Actor {
         }
 
         if (energy <= 0) {
-            world.delete(this); // The rabbit dies when it does not have any energy left.
+            // dies();
         }
 
         simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
@@ -237,4 +237,15 @@ public class Rabbit implements Actor {
             }
         }
     }
+
+    //    private void dies() {
+    //        Location deadRabbit = world.getLocation(this);
+    //        int meat = 10;
+    //        int decayTime = 10;
+    //        world.delete(this); // The rabbit is deleted when it dies.
+    //        if (world.isTileEmpty(deadRabbit)) {
+    //            Carcass carcass = new Carcass(meat, decayTime);
+    //        world.setTile(deadRabbit, carcass); // The dead rabbit becomes a carcass.
+    //        }
+    //    }
 }

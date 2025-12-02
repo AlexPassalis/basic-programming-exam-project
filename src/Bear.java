@@ -25,12 +25,12 @@ public class Bear implements Actor {
 
     private void move(World world) {
         int territory_radius = 3;
-        Location current_location = world.getLocation(this);
-        Set<Location> territory_tiles = world.getSurroundingTiles(current_location, 3);
-
+        Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, 3);
         if (territory_tiles.size() < 1) {
             return;
         }
+
+        Location current_location = world.getLocation(this);
 
         // First, find the closest wolf in the territory
         Location closest_wolf_location = null;
@@ -67,7 +67,7 @@ public class Bear implements Actor {
                 }
             }
 
-            if (tile instanceof Bush) {
+            if (tile instanceof Berry && ((Berry) tile).hasBerries()) {
                 int dx = Math.abs(location.getX() - current_location.getX());
                 int dy = Math.abs(location.getY() - current_location.getY());
                 int distance = dx + dy;
@@ -80,45 +80,76 @@ public class Bear implements Actor {
         }
 
         // Movement priority: Wolf > Rabbit > Bush > Random
-        Location target = null;
+        Location target_destination = null;
 
         if (closest_wolf_location != null) {
-            target = closest_wolf_location;
+            target_destination = closest_wolf_location;
         } else if (closest_rabbit_location != null) {
-            target = closest_rabbit_location;
+            target_destination = closest_rabbit_location;
         } else if (closest_bush_location != null) {
-            target = closest_bush_location;
+            target_destination = closest_bush_location;
+        }
+
+        // Move one tile towards target or move randomly
+        Set<Location> adjacent_tiles = world.getEmptySurroundingTiles(current_location);
+
+        if (adjacent_tiles.isEmpty()) {
+            return;
+        }
+
+        Location next_tile = null;
+
+        if (target_destination != null) {
+            // Find adjacent tile closest to target
+            int best_distance = Integer.MAX_VALUE;
+
+            for (Location tile : adjacent_tiles) {
+                int dx = Math.abs(tile.getX() - target_destination.getX());
+                int dy = Math.abs(tile.getY() - target_destination.getY());
+                int distance = dx + dy;
+
+                if (distance < best_distance) {
+                    best_distance = distance;
+                    next_tile = tile;
+                }
+            }
         } else {
-            // No food found, move randomly
-            List<Location> list = new ArrayList<>(territory_tiles);
+            // No target, move randomly
+            List<Location> list = new ArrayList<>(adjacent_tiles);
             int index = new Random().nextInt(list.size());
-            target = list.get(index);
+            next_tile = list.get(index);
         }
 
-        // Check what's on the target tile and eat if it's food
-        Object tile_at_target = world.getTile(target);
+        if (next_tile != null) {
+            world.move(this, next_tile);
 
-        if (tile_at_target instanceof Wolf) {
-            eatWolf((Wolf) tile_at_target);
-        } else if (tile_at_target instanceof Rabbit) {
-            eatRabbit((Rabbit) tile_at_target);
-        } else if (tile_at_target instanceof Bush) {
-            eatBerries((Bush) tile_at_target);
+            // Check if we moved onto food and eat it
+            Object tile_at_new_location = world.getTile(next_tile);
+
+            if (tile_at_new_location instanceof Wolf) {
+                eatWolf((Wolf) tile_at_new_location);
+            } else if (tile_at_new_location instanceof Rabbit) {
+                eatRabbit((Rabbit) tile_at_new_location);
+            } else if (tile_at_new_location instanceof Berry) {
+                eatBerries((Berry) tile_at_new_location);
+            }
         }
-
-        // Move to target after eating (if there was blocking food, it's now deleted)
-        world.move(this, target);
     }
 
     private void eatWolf(Wolf wolf) {
         world.delete(wolf);
         energy = energy + 30;
     }
+
     private void eatRabbit(Rabbit rabbit) {
         world.delete(rabbit);
         energy = energy + 15;
     }
-    private void eatBerries(Bush bush) {
-        energy = energy + 30;
+
+    private void eatBerries(Berry bush) {
+        if (bush.hasBerries()) {
+            int number_of_berries = bush.eatBerries();
+            energy = energy + (number_of_berries * 30);
+        }
     }
 }

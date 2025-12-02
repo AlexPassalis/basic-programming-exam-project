@@ -10,9 +10,12 @@ public class Wolf implements Actor {
     private World world;
     private Den den;
     private boolean isAlpha;
-    private double energy; // Only Alfa wolves have energy
-    private List<Wolf> followers; // For alpha wolves
-    private Wolf alpha; // For non-alfa wolves
+    private double energy;
+    private Wolf alpha;
+    private List<Wolf> followers;
+    private boolean is_reproduction_time;
+    private int simulation_counts_reproducing;
+    private Location reproducing_location;
 
     Wolf(World world, Den den, Wolf alpha) {
         this.world = world;
@@ -21,6 +24,8 @@ public class Wolf implements Actor {
         this.energy = 0;
         this.alpha = alpha;
         this.followers = null;
+        this.is_reproduction_time = false;
+        this.simulation_counts_reproducing = 0;
     }
 
     Wolf(World world, Den den) {
@@ -29,6 +34,8 @@ public class Wolf implements Actor {
         this.isAlpha = true;
         this.energy = 100;
         this.followers = new ArrayList<>();
+        this.is_reproduction_time = false;
+        this.simulation_counts_reproducing = 0;
     }
 
     public boolean isAlpha() {
@@ -57,35 +64,88 @@ public class Wolf implements Actor {
 
     @Override
     public void act(World world) {
+        if (!world.contains(this)) {
+            return;
+        }
+
+        if (simulation_counts_reproducing > 0) {
+            simulation_counts_reproducing = simulation_counts_reproducing - 1;
+            if (simulation_counts_reproducing == 0) {
+                exitDenAfterReproduction();
+            }
+            return;
+        }
+
         move();
 
         if (!isAlpha) {
             return;
         }
 
+        if (!is_reproduction_time) {
+            double reproduction_chance = 0.1;
+            double dice = new Random().nextDouble(1);
+            if (dice < reproduction_chance) {
+                is_reproduction_time = true;
+            }
+        }
+
         int energy_reduction = 2;
         energy = energy - energy_reduction;
 
-        // If the alpha is about to die, delete all its followers first
         if (energy <= 0 && followers != null) {
             for (Wolf wolf : followers) {
                 try {
                     world.delete(wolf);
                 } catch (IllegalArgumentException e) {
-                    // Wolf was already deleted from the world, skip it
                 }
             }
         }
 
         if (energy <= 0) {
-            world.delete(this); // The wolf dies when it does not have any energy left.
+            world.delete(this);
         }
     }
 
     public void move() {
+        if (!world.isOnTile(this)) {
+            return;
+        }
+
         Location current_location = world.getLocation(this);
 
         if (isAlpha) {
+            if (is_reproduction_time) {
+                Location den_location = world.getLocation(den);
+
+                // Check if wolf reached the den
+                if (current_location.equals(den_location)) {
+                    enterDenForReproduction(current_location);
+                    return;
+                }
+
+                // Find the shortest path to den by moving to the adjacent tile closest to den
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile : empty_tiles) {
+                    int dx = Math.abs(tile.getX() - den_location.getX());
+                    int dy = Math.abs(tile.getY() - den_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+
+                if (best_tile != null) {
+                    world.move(this, best_tile);
+                }
+                return;
+            }
+
             Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 2);
 
             Location closest_alpha_location = null;
@@ -123,45 +183,13 @@ public class Wolf implements Actor {
                 }
             }
 
-            if (!isHungry() && closest_alpha_location != null) {
-                // Check if alpha is on adjacent tile (can fight it)
-                if (min_distance_alpha == 1) {
-                    Wolf other_alpha = (Wolf) world.getTile(closest_alpha_location);
-                    fightAlpha(other_alpha);
-                    return;
-                }
-
-                // Move towards the other alpha
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
-                int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile : empty_tiles) {
-                    int dx = Math.abs(tile.getX() - closest_alpha_location.getX());
-                    int dy = Math.abs(tile.getY() - closest_alpha_location.getY());
-                    int distance = dx + dy;
-
-                    if (distance < best_distance) {
-                        best_distance = distance;
-                        best_tile = tile;
-                    }
-                }
-
-                if (best_tile != null) {
-                    world.move(this, best_tile);
-                    return;
-                }
-            }
-
             if (isHungry() && closest_rabbit_location != null) {
-                // Check if rabbit is on adjacent tile (can eat it)
                 if (min_distance_rabbit == 1) {
                     Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
                     eatRabbit(rabbit);
                     return;
                 }
 
-                // Move towards the rabbit
                 Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
                 Location best_tile = null;
                 int best_distance = Integer.MAX_VALUE;
@@ -183,7 +211,33 @@ public class Wolf implements Actor {
                 }
             }
 
+            if (!isHungry() && closest_alpha_location != null) {
+                if (min_distance_alpha == 1) {
+                    Wolf other_alpha = (Wolf) world.getTile(closest_alpha_location);
+                    fightAlpha(other_alpha);
+                    return;
+                }
 
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile : empty_tiles) {
+                    int dx = Math.abs(tile.getX() - closest_alpha_location.getX());
+                    int dy = Math.abs(tile.getY() - closest_alpha_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+
+                if (best_tile != null) {
+                    world.move(this, best_tile);
+                    return;
+                }
+            }
         }
 
         Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location);
@@ -195,14 +249,39 @@ public class Wolf implements Actor {
         List<Location> tiles = new ArrayList<>(neighbour_empty_tiles);
 
         if (isAlpha) {
-            // Alpha moves randomly
             int randomIndex = new Random().nextInt(tiles.size());
             Location randomTile = tiles.get(randomIndex);
             world.move(this, randomTile);
         } else {
-            // Follower moves towards alpha
             try {
-                if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
+                // Check if alpha is reproducing - move to den instead
+                if (alpha != null && alpha.is_reproduction_time) {
+                    Location den_location = world.getLocation(den);
+
+                    // Check if follower reached the den
+                    if (current_location.equals(den_location)) {
+                        enterDenForReproduction(current_location);
+                        return;
+                    }
+
+                    // Move towards den
+                    Location closest_tile = null;
+                    int min_distance = Integer.MAX_VALUE;
+                    for (Location tile : tiles) {
+                        int dx = Math.abs(tile.getX() - den_location.getX());
+                        int dy = Math.abs(tile.getY() - den_location.getY());
+                        int distance = dx + dy;
+
+                        if (distance < min_distance) {
+                            min_distance = distance;
+                            closest_tile = tile;
+                        }
+                    }
+
+                    if (closest_tile != null) {
+                        world.move(this, closest_tile);
+                    }
+                } else if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
                     Location alpha_location = world.getLocation(alpha);
 
                     Location closest_tile = null;
@@ -222,13 +301,11 @@ public class Wolf implements Actor {
                         world.move(this, closest_tile);
                     }
                 } else {
-                    // If no alpha or alpha not on tile, move randomly
                     int randomIndex = new Random().nextInt(tiles.size());
                     Location randomTile = tiles.get(randomIndex);
                     world.move(this, randomTile);
                 }
             } catch (IllegalArgumentException e) {
-                // Alpha doesn't exist in world, move randomly
                 int randomIndex = new Random().nextInt(tiles.size());
                 Location randomTile = tiles.get(randomIndex);
                 world.move(this, randomTile);
@@ -236,12 +313,11 @@ public class Wolf implements Actor {
         }
     }
 
-    // Setter method for testing purposes
     public void setEnergy(double energy) {
         this.energy = energy;
     }
 
-    private void eatRabbit(Rabbit rabbit){
+    private void eatRabbit(Rabbit rabbit) {
         world.delete(rabbit);
         energy = energy + 50;
     }
@@ -251,9 +327,7 @@ public class Wolf implements Actor {
     }
 
     private void fightAlpha(Wolf other_alpha) {
-        // The alpha with the least energy dies
         if (this.energy < other_alpha.energy) {
-            // Transfer this alpha's followers to the other alpha
             if (this.followers != null) {
                 for (Wolf follower : this.followers) {
                     follower.setAlpha(other_alpha);
@@ -263,7 +337,6 @@ public class Wolf implements Actor {
             }
             world.delete(this);
         } else if (other_alpha.energy < this.energy) {
-            // Transfer other alpha's followers to this alpha
             if (other_alpha.followers != null) {
                 for (Wolf follower : other_alpha.followers) {
                     follower.setAlpha(this);
@@ -273,9 +346,7 @@ public class Wolf implements Actor {
             }
             world.delete(other_alpha);
         } else {
-            // If both have equal energy, randomly choose one to die
             if (Math.random() < 0.5) {
-                // Transfer this alpha's followers to the other alpha
                 if (this.followers != null) {
                     for (Wolf follower : this.followers) {
                         follower.setAlpha(other_alpha);
@@ -285,7 +356,6 @@ public class Wolf implements Actor {
                 }
                 world.delete(this);
             } else {
-                // Transfer other alpha's followers to this alpha
                 if (other_alpha.followers != null) {
                     for (Wolf follower : other_alpha.followers) {
                         follower.setAlpha(this);
@@ -296,5 +366,63 @@ public class Wolf implements Actor {
                 world.delete(other_alpha);
             }
         }
+    }
+
+    public void enterDenForReproduction(Location location) {
+        reproducing_location = location;
+        world.remove(this);
+
+        if (isAlpha) {
+            simulation_counts_reproducing = 25;
+        } else {
+            simulation_counts_reproducing = 1;
+        }
+    }
+
+    public void exitDenAfterReproduction() {
+        if (!isAlpha) {
+            simulation_counts_reproducing = 0;
+            return;
+        }
+
+        if (reproducing_location != null) {
+            Location den_location = world.getLocation(den);
+            Set<Location> exit_tiles = world.getEmptySurroundingTiles(den_location);
+
+            // Re-add alpha
+            if (!exit_tiles.isEmpty()) {
+                Location exit_location = exit_tiles.iterator().next();
+                world.setTile(exit_location, this);
+                exit_tiles.remove(exit_location);
+                reproducing_location = null;
+            }
+
+            // Re-add all followers
+            if (followers != null) {
+                for (Wolf follower : followers) {
+                    if (follower.reproducing_location != null) {
+                        if (!exit_tiles.isEmpty()) {
+                            Location follower_exit = exit_tiles.iterator().next();
+                            world.setTile(follower_exit, follower);
+                            exit_tiles.remove(follower_exit);
+                            follower.reproducing_location = null;
+                            follower.simulation_counts_reproducing = 0;
+                        }
+                    }
+                }
+
+                // Create new pup
+                Wolf pup = new Wolf(world, den, this);
+                addFollower(pup);
+
+                if (!exit_tiles.isEmpty()) {
+                    Location pup_location = exit_tiles.iterator().next();
+                    world.setTile(pup_location, pup);
+                }
+            }
+        }
+
+        is_reproduction_time = false;
+        simulation_counts_reproducing = 0;
     }
 }

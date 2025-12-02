@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test;
-
+import itumulator.world.Location;
 import java.io.FileNotFoundException;
 
 public class TestWolf extends TestSuper {
@@ -15,5 +15,33 @@ public class TestWolf extends TestSuper {
         setUp();
         Den den = new Den();
         testDeath(new Wolf(world, den), Wolf.class);
+    }
+    public void follower_follows_alpha() throws FileNotFoundException {
+        setUp();
+        Den den = new Den();
+        Location denLocation = new Location(5, 5);
+        world.setTile(denLocation, den);
+
+        Wolf alpha = new Wolf(world, den);
+        Wolf follower = new Wolf(world, den, alpha);
+        alpha.addFollower(follower);
+
+        Location alphaStart = new Location(2, 2);
+        Location followerStart = new Location (2, 4);
+        world.setTile(alphaStart, alpha);
+        world.setTile(followerStart, follower);
+        alpha.act(world);
+        follower.act(world);
+
+        Location alphaNew = world.getLocation(alpha);
+        Location followerNew = world.getLocation(follower);
+
+        int oldDistance = Math.abs(alphaStart.getX() - followerStart.getX()) +
+                Math.abs(alphaStart.getY() - followerStart.getY());
+
+        int newDistance = Math.abs(alphaNew.getX() - followerNew.getX()) +
+                Math.abs(alphaNew.getY() - followerNew.getY());
+
+        assert newDistance < oldDistance;
     }
 }
