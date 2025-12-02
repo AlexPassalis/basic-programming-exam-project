@@ -50,6 +50,16 @@ public class Main {
 
             HashMap<String, Integer> values = new HashMap<>();
             String count_or_interval = parts[1];
+            if (parts.length > 2) {
+                String spawn_location = parts[2];
+                String coordinates = spawn_location.replace("(", "").replace(")", "");
+                String[] coords = coordinates.split(",");
+                int spawn_x = Integer.parseInt(coords[0]);
+                int spawn_y = Integer.parseInt(coords[1]);
+                values.put("spawn_x", spawn_x);
+                values.put("spawn_y", spawn_y);
+            }
+
             if (!count_or_interval.contains("-")) {
                 int count = Integer.parseInt(count_or_interval);
                 values.put("count", count);
@@ -96,7 +106,14 @@ public class Main {
                 amount = new Random().nextInt(max - min + 1) + min;
             }
 
-            initialize(type, amount);
+            Location spawn_location = null;
+            Integer spawn_x = count.get("spawn_x");
+            if (spawn_x != null) {
+                Integer spawn_y = count.get("spawn_y");
+                spawn_location = new Location(spawn_x, spawn_y);
+            }
+
+            initialize(type, amount, spawn_location);
         }
 
         if (!isTesting) {
@@ -115,13 +132,18 @@ public class Main {
         }
     }
 
-    private static void initialize(String type, int amount) {
+    private static void initialize(String type, int amount, Location spawn_location) {
         // Create a single den for all wolves in this group
         Den wolf_den = null;
         Wolf alpha_wolf = null;
 
         for (int i = 0; i < amount; i = i + 1) {
-            Location location = type.equals("grass") || type.equals("burrow") ? getEmptyNonBlockingLocation() : getEmptyLocation();
+            Location location;
+            if (spawn_location != null) {
+                location = spawn_location;
+            } else {
+                location = type.equals("grass") || type.equals("burrow") ? getEmptyNonBlockingLocation() : getEmptyLocation();
+            }
 
             Object entity;
             switch (type) {
@@ -150,7 +172,7 @@ public class Main {
                     }
                     break;
                 case "bear":
-                    entity = new Bear(world);
+                    entity = new Bear(world, location);
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid entity type: " + type);
