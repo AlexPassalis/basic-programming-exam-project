@@ -15,16 +15,12 @@ import itumulator.world.World;
 //    Location current_location = world.getLocation(this);
 
 //    (Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 2);
-
 //    for (Location location : surrounding_tiles) {
 //          Object tile = world.getTile(location);
-//
 //              if (tile instanceof Mushroom) {
+//                  return;
+//          else if (tile !instanceof Mushroom) {
+//                  mushroomTimer = mushroomTimer - 1; //hvis der ikke er svampe i nærheden, så kan der ikke spredes.
 //
-
 //        if (mushroomTimer <= 0) {
 //            world.delete(this);
-//        }
-
-//        if (
-//    }

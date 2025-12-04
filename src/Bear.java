@@ -1,31 +1,23 @@
-import itumulator.simulator.Actor;
 import itumulator.world.World;
 import itumulator.world.Location;
-import itumulator.simulator.Simulator;
 import java.util.*;
 
-public class Bear implements Actor {
-    private World world;
+public class Bear extends Animal {
     private Location spawn_location;
-    private double energy = 100;
 
-    Bear(World world, Location spawn_location) {
-        this.world = world;
+    Bear(Location spawn_location) {
         this.spawn_location = spawn_location;
     }
 
     @Override
     public void act(World world) {
-        move(world);
-        energy = energy - 10;
-        if (energy <= 0) {
-            world.delete(this);
-        }
+        super.act(world);
     }
 
-    private void move(World world) {
+    @Override
+    protected void movementLogic() {
         int territory_radius = 3;
-        Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, 3);
+        Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, territory_radius);
         if (territory_tiles.size() < 1) {
             return;
         }
@@ -151,5 +143,14 @@ public class Bear implements Actor {
             int number_of_berries = bush.eatBerries();
             energy = energy + (number_of_berries * 30);
         }
+    }
+
+    @Override
+    protected void loseEnergyForMoving() {
+        energy = energy - 10;
+    }
+
+    public void restoreEnergyForTesting() { // Method for testing purposes
+        this.energy = 100;
     }
 }

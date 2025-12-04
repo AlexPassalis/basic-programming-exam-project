@@ -1,4 +1,3 @@
-import itumulator.simulator.Actor;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -6,33 +5,27 @@ import java.util.List;
 import java.util.Set;
 import java.util.Random;
 
-public class Wolf implements Actor {
-    private World world;
+public class Wolf extends Animal {
     private Den den;
     private boolean isAlpha;
-    private double energy;
     private Wolf alpha;
     private List<Wolf> followers;
     private boolean is_reproduction_time;
     private int simulation_counts_reproducing;
     private Location reproducing_location;
 
-    Wolf(World world, Den den, Wolf alpha) {
-        this.world = world;
+    Wolf(Den den, Wolf alpha) {
         this.den = den;
         this.isAlpha = false;
-        this.energy = 0;
         this.alpha = alpha;
         this.followers = null;
         this.is_reproduction_time = false;
         this.simulation_counts_reproducing = 0;
     }
 
-    Wolf(World world, Den den) {
-        this.world = world;
+    Wolf(Den den) {
         this.den = den;
         this.isAlpha = true;
-        this.energy = 100;
         this.followers = new ArrayList<>();
         this.is_reproduction_time = false;
         this.simulation_counts_reproducing = 0;
@@ -76,7 +69,7 @@ public class Wolf implements Actor {
             return;
         }
 
-        move();
+        super.act(world);
 
         if (!isAlpha) {
             return;
@@ -90,9 +83,6 @@ public class Wolf implements Actor {
             }
         }
 
-        int energy_reduction = 2;
-        energy = energy - energy_reduction;
-
         if (energy <= 0 && followers != null) {
             for (Wolf wolf : followers) {
                 try {
@@ -101,17 +91,10 @@ public class Wolf implements Actor {
                 }
             }
         }
-
-        if (energy <= 0) {
-            world.delete(this);
-        }
     }
 
-    public void move() {
-        if (!world.isOnTile(this)) {
-            return;
-        }
-
+    @Override
+    protected void movementLogic() {
         Location current_location = world.getLocation(this);
 
         if (isAlpha) {
@@ -313,6 +296,12 @@ public class Wolf implements Actor {
         }
     }
 
+    @Override
+    protected void loseEnergyForMoving() {
+        int energy_reduction = 2;
+        energy = energy - energy_reduction;
+    }
+
     public void setEnergy(double energy) {
         this.energy = energy;
     }
@@ -412,7 +401,7 @@ public class Wolf implements Actor {
                 }
 
                 // Create new pup
-                Wolf pup = new Wolf(world, den, this);
+                Wolf pup = new Wolf(den, this);
                 addFollower(pup);
 
                 if (!exit_tiles.isEmpty()) {

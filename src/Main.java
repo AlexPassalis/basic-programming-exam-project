@@ -155,7 +155,7 @@ public class Main {
                     entity = new Burrow();
                     break;
                 case "rabbit":
-                    entity = new Rabbit(world);
+                    entity = new Rabbit();
                     break;
                 case "wolf":
                     boolean isAlpha = i == 0;
@@ -164,16 +164,16 @@ public class Main {
                         wolf_den = new Den();
                         world.setTile(den_location, wolf_den);
 
-                        alpha_wolf = new Wolf(world, wolf_den);
+                        alpha_wolf = new Wolf(wolf_den);
                         entity = alpha_wolf;
                     } else {
-                        Wolf nonAlfaWolf = new Wolf(world, wolf_den, alpha_wolf);
+                        Wolf nonAlfaWolf = new Wolf(wolf_den, alpha_wolf);
                         alpha_wolf.addFollower(nonAlfaWolf);
                         entity = nonAlfaWolf;
                     }
                     break;
                 case "bear":
-                    entity = new Bear(world, location);
+                    entity = new Bear(location);
                     break;
                 case "berry":
                     entity = new Berry(program);

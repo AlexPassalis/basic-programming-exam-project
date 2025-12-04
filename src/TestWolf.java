@@ -7,23 +7,25 @@ public class TestWolf extends TestSuper {
     public void gets_initialised() throws FileNotFoundException {
         setUp();
         Den den = new Den();
-        testInitialization(new Wolf(world, den), Wolf.class);
+        testInitialization(new Wolf(den), Wolf.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
         Den den = new Den();
-        testDeath(new Wolf(world, den), Wolf.class);
+        testDeath(new Wolf(den), Wolf.class);
     }
+
+    @Test
     public void follower_follows_alpha() throws FileNotFoundException {
         setUp();
         Den den = new Den();
         Location denLocation = new Location(5, 5);
         world.setTile(denLocation, den);
 
-        Wolf alpha = new Wolf(world, den);
-        Wolf follower = new Wolf(world, den, alpha);
+        Wolf alpha = new Wolf(den);
+        Wolf follower = new Wolf(den, alpha);
         alpha.addFollower(follower);
 
         Location alphaStart = new Location(2, 2);

@@ -1,4 +1,3 @@
-import itumulator.simulator.Actor;
 import itumulator.world.World;
 import java.util.Random;
 import java.util.ArrayList;
@@ -7,21 +6,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.*;
 
-public class Rabbit implements Actor {
-    private World world;
+public class Rabbit extends Animal {
     private int age;
-    private double energy;
     private Burrow burrow;
-    private Location sleeping_location;
     private int simulation_counts;
+    private Location sleeping_location;
 
-    Rabbit(World world) {
-        this.world = world;
+    Rabbit() {
         age = 0;
-        energy = 100;
         burrow = null;
-        sleeping_location = null;
         simulation_counts = 0;
+        sleeping_location = null;
     }
 
     private Burrow getClosestBurrow() {
@@ -58,38 +53,40 @@ public class Rabbit implements Actor {
 
     @Override
     public void act(World world) {
+        if (!world.contains(this)) { // Don't act if having been removed e.g. eaten
+            return;
+        }
+
         if (simulation_counts == 1) {
             burrow = getClosestBurrow(); // Attach the closest borrow to the rabbit.
+        }
+
+        if (sleeping_location != null) {
+            sleep();
+            return;
         }
 
         if (!world.isNight()) {
             this.wakeUp(); // Wake the rabbit up if it is not night anymore.
         }
 
-        if (sleeping_location == null) {
-            move(); // Move the rabbit, if it is not sleeping.
-        }
+        super.act(world);
 
-        double energy_multiplier = 1.25;
-        if (sleeping_location == null) { // Rabbit is awake.
-            energy = energy - (age * energy_multiplier); // The rabbit losses energy from being awake.
-            reproduce(); // The rabbit can reproduce when awake.
-        } else { // Rabbit is sleeping.
-            energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
-        }
-
-        if (energy <= 0) {
-            // dies();
-        }
+        reproduce();
 
         simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
-
         if (simulation_counts % 10 == 0) { // Age the rabbit by 1 year every 10 program simulations.
             age = age + 1;
         }
     }
 
-    public void move() {
+    private void sleep() {
+        double energy_multiplier = 1.25;
+        energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
+    }
+
+    @Override
+    protected void movementLogic() {
         Location current_location = world.getLocation(this); // Get the current location of the rabbit.
         Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location); // Get all the empty surrounding tiles.
 
@@ -117,23 +114,27 @@ public class Rabbit implements Actor {
             }
 
             if (closest_tile != null && closest_tile.equals(burrow_location)) { // When the Rabbit gets to its Borrow, sleep.
-                this.sleep(current_location);
+                goToSleep(current_location);
             } else if (closest_tile != null) { // Move the Rabbit towards its Burrow.
                 world.move(this, closest_tile);
             }
 
         } else {
-            int randomIndex = new Random().nextInt(tiles.size());
-            Location randomTile = tiles.get(randomIndex);
-            world.move(this, randomTile); // Move towards a random nerby tile.
+            int random_index = new Random().nextInt(tiles.size());
+            Location random_tile = tiles.get(random_index);
+            world.move(this, random_tile); // Move towards a random nerby tile
 
-            if (!is_night) { // If it is night and the tile the rabbit wants to move to is Grass, eat it.
-                Object grass_tile = world.getNonBlocking(randomTile);
-                if (grass_tile instanceof Grass) {
-                    eat((Grass) grass_tile);
-                }
+            Object grass_tile = world.getNonBlocking(random_tile);
+            if (grass_tile instanceof Grass) {
+                eat((Grass) grass_tile);
             }
         }
+    }
+
+    @Override
+    protected void loseEnergyForMoving() {
+        double energy_multiplier = 1.25;
+        energy = energy - (age * energy_multiplier);
     }
 
     public void eat(Grass grass_tile) {
@@ -190,7 +191,7 @@ public class Rabbit implements Actor {
         int randomIndex = new Random().nextInt(tiles.size());
         Location baby_location = tiles.get(randomIndex);
 
-        world.setTile(baby_location, new Rabbit(world));
+        world.setTile(baby_location, new Rabbit());
 
         reproductionEnergyCost();
         partner.reproductionEnergyCost();
@@ -217,7 +218,7 @@ public class Rabbit implements Actor {
         energy = energy - 30; // Energy cost to reproduce.
     }
 
-    public void sleep(Location location) {
+    public void goToSleep(Location location) {
         sleeping_location = location;
         world.remove(this);
     }
@@ -237,15 +238,4 @@ public class Rabbit implements Actor {
             }
         }
     }
-
-    //    private void dies() {
-    //        Location deadRabbit = world.getLocation(this);
-    //        int meat = 10;
-    //        int decayTime = 10;
-    //        world.delete(this); // The rabbit is deleted when it dies.
-    //        if (world.isTileEmpty(deadRabbit)) {
-    //            Carcass carcass = new Carcass(meat, decayTime);
-    //        world.setTile(deadRabbit, carcass); // The dead rabbit becomes a carcass.
-    //        }
-    //    }
 }
