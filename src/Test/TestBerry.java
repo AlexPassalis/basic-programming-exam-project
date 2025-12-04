@@ -1,7 +1,11 @@
+package test;
+import app.*;
+
 import itumulator.world.World;
 import itumulator.executable.DisplayInformation;
 import itumulator.executable.Program;
 import itumulator.world.Location;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,13 +19,13 @@ public class TestBerry extends TestSuper {
         Berry berry = new Berry(program);
         Location location = new Location (4,4);
         world.setTile(location, berry);
-        assertFalse(berry.hasBerries()); // Does not have any berries at spawn time
+        Assertions.assertFalse(berry.hasBerries()); // Does not have any berries at spawn time
 
         for (int i = 0; i < 25; i++) {
             berry.act(world);
         }
 
-        assertTrue(berry.hasBerries());
+        Assertions.assertTrue(berry.hasBerries());
     }
 
     @Test
@@ -36,7 +40,7 @@ public class TestBerry extends TestSuper {
         for (int i = 0; i < 25; i++) {
             berry.act(world);
         }
-        assertTrue(berry.hasBerries()); //Bush should have berries before being eaten
+        Assertions.assertTrue(berry.hasBerries()); //Bush should have berries before being eaten
 
         DisplayInformation before = berry.getInformation();
         assertEquals("custom-bush-berries", before.getImageKey()); // Bush should show berries image before eating

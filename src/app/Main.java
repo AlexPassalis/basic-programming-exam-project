@@ -1,3 +1,5 @@
+package app;
+
 import java.awt.Color;
 
 import itumulator.executable.DisplayInformation;
@@ -30,20 +32,20 @@ public class Main {
         int size = scanner.nextInt(); // The size of the world defined in the input file.
         int display_size = 800;
         int delay = isTesting ? 15 : 300;
+        int simulations_count = 200;
 
         HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
         scanner.nextLine();
-        int line_number = 1; // Track line number (starting from 1 after the size line)
+        int line_number = 0; // Track line number (0 indexed)
         while (scanner.hasNextLine()) {
-            String line = scanner.nextLine().trim();
             line_number = line_number + 1;
+
+            String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
                 continue;
             }
-
             String[] parts = line.split("\\s+");
-
             String type = parts[0];
             if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear") && !type.equals("berry")) {
                 throw new IllegalArgumentException("Invalid type: " + type);
@@ -121,7 +123,9 @@ public class Main {
             program.show();
         }
 
-        int simulations_count = 200;
+        System.out.println("This is the data: " + data);
+        System.out.println("This is the delay: " + delay);
+
         for (int i = 0; i < simulations_count; i++) {
             program.simulate();
             try {

@@ -1,9 +1,8 @@
-import itumulator.world.Location;
+package test;
+
+import app.*;
 import org.junit.jupiter.api.*;
 import java.io.FileNotFoundException;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBurrow extends TestSuper {
     @Test

@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.simulator.Actor;
 import java.util.Random;
 import itumulator.world.NonBlocking;

@@ -1,7 +1,5 @@
-import itumulator.world.Location;
-import org.junit.jupiter.api.Test;
-
-import java.io.FileNotFoundException;
+package test;
+import app.*;
 
 public class TestCarcass extends TestSuper {
 //    @Test

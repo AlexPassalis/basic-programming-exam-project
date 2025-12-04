@@ -1,3 +1,5 @@
+package app;
+
 import java.awt.Color;
 import itumulator.executable.Program;
 import itumulator.executable.DisplayInformation;
@@ -10,7 +12,7 @@ public class Berry implements Actor, NonBlocking, DynamicDisplayInformationProvi
     private int berries = 0;
     private int simulation_counts = 0;
 
-    Berry(Program program) {
+    public Berry(Program program) {
     }
 
     @Override

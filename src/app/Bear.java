@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.*;
@@ -5,12 +7,16 @@ import java.util.*;
 public class Bear extends Animal {
     private Location spawn_location;
 
-    Bear(Location spawn_location) {
+    public Bear(Location spawn_location) {
         this.spawn_location = spawn_location;
     }
 
     @Override
     public void act(World world) {
+        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
+            return;
+        }
+
         super.act(world);
     }
 

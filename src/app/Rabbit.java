@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.world.World;
 import java.util.Random;
 import java.util.ArrayList;
@@ -12,7 +14,7 @@ public class Rabbit extends Animal {
     private int simulation_counts;
     private Location sleeping_location;
 
-    Rabbit() {
+    public Rabbit() {
         age = 0;
         burrow = null;
         simulation_counts = 0;
@@ -53,7 +55,7 @@ public class Rabbit extends Animal {
 
     @Override
     public void act(World world) {
-        if (!world.contains(this)) { // Don't act if having been removed e.g. eaten
+        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
             return;
         }
 

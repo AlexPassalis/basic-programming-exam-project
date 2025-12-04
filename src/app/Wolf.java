@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ public class Wolf extends Animal {
     private int simulation_counts_reproducing;
     private Location reproducing_location;
 
-    Wolf(Den den, Wolf alpha) {
+    public Wolf(Den den, Wolf alpha) {
         this.den = den;
         this.isAlpha = false;
         this.alpha = alpha;
@@ -23,7 +25,7 @@ public class Wolf extends Animal {
         this.simulation_counts_reproducing = 0;
     }
 
-    Wolf(Den den) {
+    public Wolf(Den den) {
         this.den = den;
         this.isAlpha = true;
         this.followers = new ArrayList<>();
@@ -57,15 +59,15 @@ public class Wolf extends Animal {
 
     @Override
     public void act(World world) {
-        if (!world.contains(this)) {
-            return;
-        }
-
         if (simulation_counts_reproducing > 0) {
             simulation_counts_reproducing = simulation_counts_reproducing - 1;
             if (simulation_counts_reproducing == 0) {
                 exitDenAfterReproduction();
             }
+            return;
+        }
+
+        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
             return;
         }
 

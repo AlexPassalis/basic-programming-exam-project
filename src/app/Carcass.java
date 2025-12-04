@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.simulator.Actor;
 import itumulator.world.NonBlocking;
 import itumulator.world.World;

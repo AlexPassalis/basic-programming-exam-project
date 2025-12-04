@@ -1,3 +1,6 @@
+package test;
+import app.*;
+
 import itumulator.world.Location;
 import org.junit.jupiter.api.*;
 import java.io.FileNotFoundException;

@@ -1,3 +1,5 @@
+package app;
+
 import itumulator.simulator.Actor;
 import itumulator.world.World;
 
@@ -5,7 +7,7 @@ public class Animal implements Actor {
     World world;
     protected double energy;
 
-    Animal() {
+    public Animal() {
         this.energy = 100;
     }
 
