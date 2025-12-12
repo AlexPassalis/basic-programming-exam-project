@@ -123,9 +123,6 @@ public class Main {
             program.show();
         }
 
-        System.out.println("This is the data: " + data);
-        System.out.println("This is the delay: " + delay);
-
         for (int i = 0; i < simulations_count; i++) {
             program.simulate();
             try {
