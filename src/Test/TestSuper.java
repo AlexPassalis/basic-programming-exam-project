@@ -1,6 +1,8 @@
 package test;
 
 import app.*;
+import app.animal.Rabbit;
+import app.animal.Wolf;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;

@@ -1,7 +1,7 @@
 package test;
 import app.*;
 
-import itumulator.executable.Program;
+import app.animal.Rabbit;
 import itumulator.world.Location;
 import org.junit.jupiter.api.*;
 import java.io.FileNotFoundException;
@@ -185,28 +185,27 @@ public class TestRabbit extends TestSuper {
     @Test
     public void goes_to_burrow_at_night () throws FileNotFoundException {
         setUp();
-        world.setNight();
-        Location burrowLocation = findEmptyTile();
+        Location burrowLocation = new Location (4,4);
         world.setTile(burrowLocation, new Burrow());
 
-        Location rabbitLocation = findEmptyTile();
-        if (Objects.equals(rabbitLocation, burrowLocation)) {
-            int sx = Math.min(world.getSize()-1, burrowLocation.getX() + 2);
-            int sy = burrowLocation.getY();
-            rabbitLocation = new Location (sx, sy);
-            if (!world.isTileEmpty(rabbitLocation) || world.containsNonBlocking(rabbitLocation)) {
-                rabbitLocation = findEmptyTile();
-            }
-        }
+        Location rabbitLocation = new Location (4, 6);
         Rabbit rabbit = new Rabbit(false);
         world.setTile(rabbitLocation, rabbit);
-        final int MAX_STEPS = 20;
-        boolean removed = false;
-        for (int i = 0; i < MAX_STEPS; i++) {
-            if (!world.contains(rabbit)) { removed = true; break; }
-            rabbit.act(world);
+
+        world.setNight();
+        rabbit.act(world);
+        Location before = world.getLocation(rabbit);
+        int oldDistance = Math.abs(before.getX() - burrowLocation.getX()) +
+                Math.abs(before.getY() - burrowLocation.getY());
+
+        if (!world.contains(rabbit)) {
+            assertFalse(world.contains(rabbit));
+            return;
         }
-        assertTrue(removed || !world.contains(rabbit));
-        assertTrue(world.contains(new Burrow()) || world.containsNonBlocking(burrowLocation));
+        Location after = world.getLocation(rabbit);
+        int newDistance = Math.abs(after.getX() - burrowLocation.getX()) +
+                Math.abs(after.getY() - burrowLocation.getY());
+
+        assertTrue(newDistance < oldDistance);
     }
 }

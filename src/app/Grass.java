@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.*;
 
-public class Grass implements Actor, NonBlocking {
+public class Grass implements Actor, NonBlocking, Edible {
     @Override
     public void act(World world) {
         spread(world);

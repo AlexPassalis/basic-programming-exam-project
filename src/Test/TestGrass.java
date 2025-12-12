@@ -1,6 +1,7 @@
 package test;
 import app.*;
 
+import app.animal.Rabbit;
 import itumulator.world.Location;
 import org.junit.jupiter.api.*;
 import java.io.FileNotFoundException;

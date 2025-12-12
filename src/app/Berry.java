@@ -8,12 +8,11 @@ import itumulator.world.NonBlocking;
 import itumulator.world.World;
 import itumulator.executable.DynamicDisplayInformationProvider;
 
-public class Berry implements Actor, NonBlocking, DynamicDisplayInformationProvider {
+public class Berry implements Actor, NonBlocking, Edible, DynamicDisplayInformationProvider {
     private int berries = 0;
     private int simulation_counts = 0;
 
-    public Berry(Program program) {
-    }
+    public Berry() {}
 
     @Override
     public void act (World world) {
@@ -32,14 +31,8 @@ public class Berry implements Actor, NonBlocking, DynamicDisplayInformationProvi
             return new DisplayInformation(Color.yellow, "custom-bush");
         }
     }
-    public boolean hasBerries() {
-        return berries > 0;
-    }
 
-    public int eatBerries() {
-        int current_berries = berries;
-        berries = 0;
-        return current_berries;
+    public int getBerries() {
+        return berries;
     }
-
 }

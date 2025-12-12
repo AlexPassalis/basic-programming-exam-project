@@ -1,5 +1,6 @@
-package app;
+package app.animal;
 
+import app.Carcass;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
@@ -34,7 +35,9 @@ public class Animal implements Actor {
         loseEnergyForMoving();
     }
 
-    private void die() {
+    protected void eat() {}
+
+    protected void die() {
         Location death_location = world.getLocation(this);
         world.delete(this);
         Carcass animal_carcass = new Carcass(carcass_has_fungi);

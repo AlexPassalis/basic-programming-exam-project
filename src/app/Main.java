@@ -2,6 +2,9 @@ package app;
 
 import java.awt.Color;
 
+import app.animal.Bear;
+import app.animal.Rabbit;
+import app.animal.Wolf;
 import itumulator.executable.DisplayInformation;
 import itumulator.executable.Program;
 import itumulator.world.Location;

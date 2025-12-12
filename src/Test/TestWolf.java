@@ -1,6 +1,9 @@
 package test;
 import app.*;
 
+import app.animal.Animal;
+import app.animal.Rabbit;
+import app.animal.Wolf;
 import org.junit.jupiter.api.Test;
 import itumulator.world.Location;
 import java.io.FileNotFoundException;
@@ -92,35 +95,39 @@ public class TestWolf extends TestSuper {
         Den den = new Den();
         Location denLocation = new Location(5, 5);
         world.setTile(denLocation, den);
+
         Wolf alpha = new Wolf(false, den);
         Wolf follower = new Wolf (false, den, alpha);
         alpha.addFollower(follower);
         Location alphaLocation = new Location (2, 2);
         Location followerLocation = new Location (2, 3);
+
         world.setTile(alphaLocation, alpha);
         world.setTile(followerLocation, follower);
-        int initialFollowers = alpha.getFollowers() == null ? 0 : alpha.getFollowers().size();
-        var f = Wolf.class.getDeclaredField("is_reproduction_time");
-        f.setAccessible(true);
-        f.setBoolean(alpha, true);
-        final int MAX_STEPS = 200;
-        boolean pupProduced  = false;
-        for (int step = 0; step < MAX_STEPS; step++) {
-            try {alpha.act(world); } catch (IllegalArgumentException ignored) {}
-            try {follower.act(world); } catch (IllegalArgumentException ignored) {}
-            if (world.contains(alpha)) {
-                int currentFollowers = alpha.getFollowers() == null ? 0 : alpha.getFollowers().size();
-                if (currentFollowers == initialFollowers) {
-                    pupProduced = true;
-                    break;
-                }
-            }
-        }
-        assertTrue(pupProduced);
+        int initialFollowers = alpha.getFollowers().size();
+
+        java.lang.reflect.Field worldField = Animal.class.getDeclaredField("world");
+        worldField.setAccessible(true);
+        worldField.set(alpha, world);
+        worldField.set(follower, world);
+
+        alpha.enterDenForReproduction(world.getLocation(alpha));
+        follower.enterDenForReproduction(world.getLocation(follower));
+
+        java.lang.reflect.Field counterField = Wolf.class.getDeclaredField("simulation_counts_reproducing");
+        counterField.setAccessible(true);
+        counterField.setInt(alpha, 1);
+        counterField.setInt(follower, 1);
+
+        alpha.act(world);
+        follower.act(world);
+
+        assertTrue(world.contains(alpha));
+        int afterFollowers = alpha.getFollowers().size();
+        assertTrue(afterFollowers > initialFollowers);
+
         int wolfCount = 0;
-        for (Object e : world.getEntities().keySet()) {
-            if (e instanceof Wolf) wolfCount++;
-        }
+        for (Object e: world.getEntities().keySet()) if (e instanceof Wolf) wolfCount++;
         assertTrue(wolfCount >= initialFollowers + 2);
     }
 }

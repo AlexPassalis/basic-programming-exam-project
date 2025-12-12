@@ -1,10 +1,11 @@
-package app;
+package app.animal;
 
+import app.Berry;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.*;
 
-public class Bear extends Animal {
+public class Bear extends Predator {
     private Location spawn_location;
 
     public Bear(boolean carcass_has_fungi, Location spawn_location) {
@@ -122,33 +123,17 @@ public class Bear extends Animal {
         if (next_tile != null) {
             world.move(this, next_tile);
 
-            // Check if we moved onto food and eat it
             Object tile_at_new_location = world.getTile(next_tile);
 
-            if (tile_at_new_location instanceof Wolf) {
-                eatWolf((Wolf) tile_at_new_location);
-            } else if (tile_at_new_location instanceof Rabbit) {
-                eatRabbit((Rabbit) tile_at_new_location);
-            } else if (tile_at_new_location instanceof Berry) {
-                eatBerries((Berry) tile_at_new_location);
+            if (tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
+                kill((Animal) tile_at_new_location);
+            } if (tile_at_new_location instanceof Berry) {
+                Berry berry = (Berry) tile_at_new_location;
+                int berry_count = berry.getBerries();
+                if (berry_count > 0) {
+                    eatBerries(berry, berry_count);
+                }
             }
-        }
-    }
-
-    private void eatWolf(Wolf wolf) {
-        world.delete(wolf);
-        energy = energy + 30;
-    }
-
-    private void eatRabbit(Rabbit rabbit) {
-        world.delete(rabbit);
-        energy = energy + 15;
-    }
-
-    private void eatBerries(Berry bush) {
-        if (bush.hasBerries()) {
-            int number_of_berries = bush.eatBerries();
-            energy = energy + (number_of_berries * 30);
         }
     }
 
@@ -159,5 +144,11 @@ public class Bear extends Animal {
 
     public void restoreEnergyForTesting() { // Method for testing purposes
         this.energy = 100;
+    }
+
+    private void eatBerries(Berry berry, int berry_count) {
+        int energy_per_berry = 30;
+        energy = energy + (berry_count * energy_per_berry);
+        berry.getEaten(world);
     }
 }

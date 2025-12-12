@@ -1,11 +1,16 @@
 package test;
 
-import app.*;
-
+import app.Main;
+import app.animal.Bear;
+import app.animal.Rabbit;
+import app.Berry;
 import itumulator.world.Location;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileNotFoundException;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestBear extends TestSuper {
     @Test
@@ -49,6 +54,52 @@ public class TestBear extends TestSuper {
         for (int step = 0; step < MAX_STEPS; step++) {
             bear.restoreEnergyForTesting();
             if (!world.contains(rabbit)) { rabbitKilled = true; break; }
+            bear.act(world);
+            if (!world.contains(rabbit)) { rabbitKilled = true; break; }
         }
+        assertTrue(rabbitKilled);
+        assertTrue(world.contains(bear));
+    }
+    @Test
+    public void bear_eats_berries () throws Exception {
+        setUp();
+        Location bearLocation = new Location (3, 5);
+        Bear bear = new Bear(false, bearLocation);
+        world.setTile(bearLocation, bear);
+
+        Location berryLocation = new Location (3, 6);
+        Berry berry = new Berry();
+        world.setTile(berryLocation, berry);
+
+        for (int i = 0; i < 25; i++) {
+            berry.act(world);
+        }
+        final int MAX_STEPS = 30;
+        boolean eaten = false;
+        for (int i = 0; i <= MAX_STEPS; i++) {
+            bear.restoreEnergyForTesting();
+            if (!world.contains(berry)) break;
+            bear.act(world);
+            if (berry.getBerries() == 0) { eaten = true; break; }
+        }
+        assertTrue(eaten);
+
+        Location berryLocation2 = new Location (4,5);
+        Berry berry2 = new Berry();
+        world.setTile(berryLocation2, berry2);
+
+        if (!world.isOnTile(bear)) {
+            world.setTile(bearLocation, bear);
+        }
+        boolean eaten2 = false;
+        for (int i = 0; i <= MAX_STEPS; i++) {
+            bear.restoreEnergyForTesting();
+            if (!world.contains(berry2)) { eaten = true; break;}
+            bear.act(world);
+            if (berry2.getBerries() == 0 && !eaten2) {
+            }
+        }
+        assertTrue(world.contains(berry2));
+        assertFalse(berry2.getBerries() == 0);
     }
 }

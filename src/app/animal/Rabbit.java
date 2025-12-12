@@ -1,5 +1,7 @@
-package app;
+package app.animal;
 
+import app.Burrow;
+import app.Grass;
 import itumulator.world.World;
 import java.util.Random;
 import java.util.ArrayList;
@@ -141,7 +143,7 @@ public class Rabbit extends Animal {
     }
 
     public void eat(Grass grass_tile) {
-        world.delete(grass_tile);
+        world.delete(grass_tile); // TODO Upate to use the getEaten on the grass tile
         energy = energy + 20;
     }
 

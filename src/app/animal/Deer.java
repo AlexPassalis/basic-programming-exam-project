@@ -1,12 +1,15 @@
-package app;
+package app.animal;
 
+import app.Berry;
+import app.Carcass;
+import app.Fungi;
+import app.Grass;
 import itumulator.world.Location;
 import itumulator.world.World;
 
 import java.util.*;
 
 public class Deer extends Animal {
-
     private int age;
     private int simulation_counts;
 
@@ -45,6 +48,8 @@ public class Deer extends Animal {
         world.move(this, best);
         eatIfPossible(best);
     }
+
+    // private ()
 
     @Override
     protected void loseEnergyForMoving() {

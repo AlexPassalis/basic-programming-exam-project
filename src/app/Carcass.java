@@ -1,11 +1,13 @@
 package app;
 
+import app.animal.Animal;
+import app.animal.Bear;
+import app.animal.Rabbit;
+import app.animal.Wolf;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.NonBlocking;
 import itumulator.world.World;
-
-import java.util.Random;
 
 public class Carcass implements Actor, NonBlocking {
     private double meat_amount;

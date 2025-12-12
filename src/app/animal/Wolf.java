@@ -1,5 +1,6 @@
-package app;
+package app.animal;
 
+import app.Den;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Random;
 
-public class Wolf extends Animal {
+public class Wolf extends Predator {
     private Den den;
     private boolean isAlpha;
     private Wolf alpha;
