@@ -1,14 +1,17 @@
 package app;
 
 import itumulator.simulator.Actor;
+import itumulator.world.Location;
 import itumulator.world.World;
 
 public class Animal implements Actor {
     World world;
     protected double energy;
+    private boolean carcass_has_fungi;
 
-    public Animal() {
+    public Animal(boolean carcass_has_fungi) {
         this.energy = 100;
+        this.carcass_has_fungi = carcass_has_fungi;
     }
 
     @Override
@@ -32,6 +35,9 @@ public class Animal implements Actor {
     }
 
     private void die() {
+        Location death_location = world.getLocation(this);
         world.delete(this);
+        Carcass animal_carcass = new Carcass(carcass_has_fungi);
+        world.setTile(death_location, animal_carcass);
     }
 }

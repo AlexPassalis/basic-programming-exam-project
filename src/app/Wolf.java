@@ -16,7 +16,8 @@ public class Wolf extends Animal {
     private int simulation_counts_reproducing;
     private Location reproducing_location;
 
-    public Wolf(Den den, Wolf alpha) {
+    public Wolf(boolean carcass_has_fungi, Den den, Wolf alpha) {
+        super(carcass_has_fungi);
         this.den = den;
         this.isAlpha = false;
         this.alpha = alpha;
@@ -25,7 +26,8 @@ public class Wolf extends Animal {
         this.simulation_counts_reproducing = 0;
     }
 
-    public Wolf(Den den) {
+    public Wolf(boolean carcass_has_fungi, Den den) {
+        super(carcass_has_fungi);
         this.den = den;
         this.isAlpha = true;
         this.followers = new ArrayList<>();
@@ -403,7 +405,7 @@ public class Wolf extends Animal {
                 }
 
                 // Create new pup
-                Wolf pup = new Wolf(den, this);
+                Wolf pup = new Wolf(false, den, this);
                 addFollower(pup);
 
                 if (!exit_tiles.isEmpty()) {

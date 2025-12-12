@@ -1,6 +1,7 @@
 package test;
 import app.*;
 
+import itumulator.executable.Program;
 import itumulator.world.Location;
 import org.junit.jupiter.api.*;
 import java.io.FileNotFoundException;
@@ -9,16 +10,29 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRabbit extends TestSuper {
+    private Location findEmptyTile() {
+        int size = world.getSize();
+        for (int x = 0; x < size; x++) {
+        for (int y = 0; y < size; y++) {
+            Location l = new Location(x,y);
+            if (world.isTileEmpty(l) && !world.containsNonBlocking(l)) {
+                return l;
+            }
+        }
+        }
+        return null;
+    }
+
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Rabbit(), Rabbit.class);
+        testInitialization(new Rabbit(false), Rabbit.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testDeath(new Rabbit(), Rabbit.class);
+        testDeath(new Rabbit(false), Rabbit.class);
     }
 
     @Test
@@ -29,7 +43,7 @@ public class TestRabbit extends TestSuper {
         Location rabbit_location = new Location(5, 5);
         Location grass_location = new Location(5, 6); // Adjacent to rabbit
 
-        Rabbit rabbit = new Rabbit();
+        Rabbit rabbit = new Rabbit(false);
         Grass grass = new Grass();
 
         world.setTile(rabbit_location, rabbit);
@@ -65,8 +79,8 @@ public class TestRabbit extends TestSuper {
         Location location1 = new Location(5, 5);
         Location location2 = new Location(7, 7);
 
-        Rabbit young_rabbit = new Rabbit();
-        Rabbit old_rabbit = new Rabbit();
+        Rabbit young_rabbit = new Rabbit(false);
+        Rabbit old_rabbit = new Rabbit(false);
 
         world.setTile(location1, young_rabbit);
         world.setTile(location2, old_rabbit);
@@ -112,8 +126,8 @@ public class TestRabbit extends TestSuper {
         Location location1 = new Location(5, 5);
         Location location2 = new Location(5, 6); // Adjacent to location1
 
-        Rabbit rabbit1 = new Rabbit();
-        Rabbit rabbit2 = new Rabbit();
+        Rabbit rabbit1 = new Rabbit(false);
+        Rabbit rabbit2 = new Rabbit(false);
 
         world.setTile(location1, rabbit1);
         world.setTile(location2, rabbit2);
@@ -167,5 +181,32 @@ public class TestRabbit extends TestSuper {
 
         // Assert that exactly one new rabbit was born
         assertEquals(rabbits_before + 1, rabbits_after);
+    }
+    @Test
+    public void goes_to_burrow_at_night () throws FileNotFoundException {
+        setUp();
+        world.setNight();
+        Location burrowLocation = findEmptyTile();
+        world.setTile(burrowLocation, new Burrow());
+
+        Location rabbitLocation = findEmptyTile();
+        if (Objects.equals(rabbitLocation, burrowLocation)) {
+            int sx = Math.min(world.getSize()-1, burrowLocation.getX() + 2);
+            int sy = burrowLocation.getY();
+            rabbitLocation = new Location (sx, sy);
+            if (!world.isTileEmpty(rabbitLocation) || world.containsNonBlocking(rabbitLocation)) {
+                rabbitLocation = findEmptyTile();
+            }
+        }
+        Rabbit rabbit = new Rabbit(false);
+        world.setTile(rabbitLocation, rabbit);
+        final int MAX_STEPS = 20;
+        boolean removed = false;
+        for (int i = 0; i < MAX_STEPS; i++) {
+            if (!world.contains(rabbit)) { removed = true; break; }
+            rabbit.act(world);
+        }
+        assertTrue(removed || !world.contains(rabbit));
+        assertTrue(world.contains(new Burrow()) || world.containsNonBlocking(burrowLocation));
     }
 }

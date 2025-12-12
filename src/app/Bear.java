@@ -7,7 +7,8 @@ import java.util.*;
 public class Bear extends Animal {
     private Location spawn_location;
 
-    public Bear(Location spawn_location) {
+    public Bear(boolean carcass_has_fungi, Location spawn_location) {
+        super(carcass_has_fungi);
         this.spawn_location = spawn_location;
     }
 
