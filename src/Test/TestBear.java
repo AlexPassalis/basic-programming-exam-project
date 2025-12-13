@@ -17,14 +17,14 @@ public class TestBear extends TestSuper {
     public void gets_initialised() throws FileNotFoundException {
         setUp();
         Location spawn_location = new Location(3, 5);
-        testInitialization(new Bear(false, spawn_location), Bear.class);
+        testInitialization(new Bear(world, false, spawn_location), Bear.class);
     }
 
     @Test
     public void bear_stays_in_territory() throws FileNotFoundException {
         setUp();
         Location spawn_location = new Location (3, 5);
-        Bear bear = new Bear(false, spawn_location);
+        Bear bear = new Bear(world, false, spawn_location);
         world.setTile(spawn_location, bear);
 
         for (int i = 0; i < 5; i = i + 1) {
@@ -43,10 +43,10 @@ public class TestBear extends TestSuper {
     public void bear_hunts_in_territory() throws FileNotFoundException {
         setUp("src/data/empty-world-mini.txt");
         Location centre = new Location (1,1);
-        Bear bear = new Bear(false, centre);
+        Bear bear = new Bear(world, false, centre);
         world.setTile(centre, bear);
         Location rabbitLocation = new Location (0,0);
-        Rabbit rabbit = new Rabbit(false);
+        Rabbit rabbit = new Rabbit(world, false);
         world.setTile(rabbitLocation, rabbit);
 
         final int MAX_STEPS = 30;
@@ -64,7 +64,7 @@ public class TestBear extends TestSuper {
     public void bear_eats_berries () throws Exception {
         setUp();
         Location bearLocation = new Location (3, 5);
-        Bear bear = new Bear(false, bearLocation);
+        Bear bear = new Bear(world, false, bearLocation);
         world.setTile(bearLocation, bear);
 
         Location berryLocation = new Location (3, 6);

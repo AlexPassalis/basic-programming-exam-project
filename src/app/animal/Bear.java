@@ -1,6 +1,7 @@
 package app.animal;
 
 import app.Berry;
+import app.Carcass;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.*;
@@ -8,8 +9,8 @@ import java.util.*;
 public class Bear extends Predator {
     private Location spawn_location;
 
-    public Bear(boolean carcass_has_fungi, Location spawn_location) {
-        super(carcass_has_fungi);
+    public Bear(World world, boolean carcass_has_fungi, Location spawn_location) {
+        super(world, carcass_has_fungi);
         this.spawn_location = spawn_location;
     }
 
@@ -32,15 +33,17 @@ public class Bear extends Predator {
 
         Location current_location = world.getLocation(this);
 
-        // First, find the closest wolf in the territory
         Location closest_wolf_location = null;
         int min_wolf_distance = Integer.MAX_VALUE;
 
         Location closest_rabbit_location = null;
         int min_rabbit_distance = Integer.MAX_VALUE;
 
-        Location closest_bush_location = null;
-        int min_bush_distance = Integer.MAX_VALUE;
+        Location closest_carcass_location = null;
+        int min_carcass_distance = Integer.MAX_VALUE;
+
+        Location closest_berry_location = null;
+        int min_berry_distance = Integer.MAX_VALUE;
 
         for (Location location : territory_tiles) {
             Object tile = world.getTile(location);
@@ -67,31 +70,44 @@ public class Bear extends Predator {
                 }
             }
 
-            if (tile instanceof Berry && ((Berry) tile).hasBerries()) {
+            if (tile instanceof Carcass) {
                 int dx = Math.abs(location.getX() - current_location.getX());
                 int dy = Math.abs(location.getY() - current_location.getY());
                 int distance = dx + dy;
 
-                if (distance < min_bush_distance) {
-                    min_bush_distance = distance;
-                    closest_bush_location = location;
+                if (distance < min_carcass_distance) {
+                    min_carcass_distance = distance;
+                    closest_carcass_location = location;
+                }
+            }
+
+            if (tile instanceof Berry && ((Berry) tile).getBerries() > 0) {
+                int dx = Math.abs(location.getX() - current_location.getX());
+                int dy = Math.abs(location.getY() - current_location.getY());
+                int distance = dx + dy;
+
+                if (distance < min_berry_distance) {
+                    min_berry_distance = distance;
+                    closest_berry_location = location;
                 }
             }
         }
 
-        // Movement priority: Wolf > Rabbit > Bush > Random
+        // Movement priority: Wolf > Rabbit > Carcass > Bush > Random
         Location target_destination = null;
 
         if (closest_wolf_location != null) {
             target_destination = closest_wolf_location;
         } else if (closest_rabbit_location != null) {
             target_destination = closest_rabbit_location;
-        } else if (closest_bush_location != null) {
-            target_destination = closest_bush_location;
+        } else if (closest_carcass_location != null) {
+            target_destination = closest_carcass_location;
+        } else if (closest_berry_location != null) {
+            target_destination = closest_berry_location;
         }
 
         // Move one tile towards target or move randomly
-        Set<Location> adjacent_tiles = world.getEmptySurroundingTiles(current_location);
+        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
 
         if (adjacent_tiles.isEmpty()) {
             return;
@@ -121,13 +137,15 @@ public class Bear extends Predator {
         }
 
         if (next_tile != null) {
-            world.move(this, next_tile);
-
             Object tile_at_new_location = world.getTile(next_tile);
 
             if (tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
-                kill((Animal) tile_at_new_location);
-            } if (tile_at_new_location instanceof Berry) {
+                Animal animal = (Animal) tile_at_new_location;
+                kill(animal);
+            } else if (tile_at_new_location instanceof Carcass) {
+                Carcass carcass = (Carcass) tile_at_new_location;
+                eatCarcass(carcass, this);
+            } else if (tile_at_new_location instanceof Berry) {
                 Berry berry = (Berry) tile_at_new_location;
                 int berry_count = berry.getBerries();
                 if (berry_count > 0) {
@@ -135,11 +153,14 @@ public class Bear extends Predator {
                 }
             }
         }
+
+        world.move(this, next_tile);
     }
 
     @Override
     protected void loseEnergyForMoving() {
-        energy = energy - 10;
+        int energy_lost_for_moving = 5;
+        energy = energy - energy_lost_for_moving;
     }
 
     public void restoreEnergyForTesting() { // Method for testing purposes

@@ -35,4 +35,9 @@ public class Berry implements Actor, NonBlocking, Edible, DynamicDisplayInformat
     public int getBerries() {
         return berries;
     }
+
+    @Override
+    public void getEaten(World world) {
+        berries = 0;
+    }
 }

@@ -1,6 +1,7 @@
 package app.animal;
 
 import app.Burrow;
+import app.Edible;
 import app.Grass;
 import itumulator.world.World;
 import java.util.Random;
@@ -10,14 +11,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.*;
 
-public class Rabbit extends Animal {
+public class Rabbit extends Animal implements Edible {
     private int age;
     private Burrow burrow;
     private int simulation_counts;
     private Location sleeping_location;
 
-    public Rabbit(boolean carcass_has_fungi) {
-        super(carcass_has_fungi);
+    public Rabbit(World world, boolean carcass_has_fungi) {
+        super(world, carcass_has_fungi);
         age = 0;
         burrow = null;
         simulation_counts = 0;
@@ -196,7 +197,7 @@ public class Rabbit extends Animal {
         int randomIndex = new Random().nextInt(tiles.size());
         Location baby_location = tiles.get(randomIndex);
 
-        world.setTile(baby_location, new Rabbit(false));
+        world.setTile(baby_location, new Rabbit(world, false));
 
         reproductionEnergyCost();
         partner.reproductionEnergyCost();

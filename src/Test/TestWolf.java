@@ -14,14 +14,14 @@ public class TestWolf extends TestSuper {
     public void gets_initialised() throws FileNotFoundException {
         setUp();
         Den den = new Den();
-        testInitialization(new Wolf(false, den), Wolf.class);
+        testInitialization(new Wolf(world, false, den), Wolf.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
         Den den = new Den();
-        testDeath(new Wolf(false, den), Wolf.class);
+        testDeath(new Wolf(world, false, den), Wolf.class);
     }
 
     @Test
@@ -31,8 +31,8 @@ public class TestWolf extends TestSuper {
         Location denLocation = new Location(5, 5);
         world.setTile(denLocation, den);
 
-        Wolf alpha = new Wolf(false, den);
-        Wolf follower = new Wolf(false, den, alpha);
+        Wolf alpha = new Wolf(world, false, den);
+        Wolf follower = new Wolf(world, false, den, alpha);
         alpha.addFollower(follower);
 
         Location alphaStart = new Location(2, 2);
@@ -60,11 +60,11 @@ public class TestWolf extends TestSuper {
         Den den = new Den();
         Location denLocation = new Location(5, 5);
         world.setTile(denLocation, den);
-        Wolf alpha = new Wolf(false, den);
+        Wolf alpha = new Wolf(world, false, den);
         Location alphaLocation = new Location (2, 2);
         world.setTile(alphaLocation, alpha);
 
-        Rabbit rabbit = new Rabbit(false);
+        Rabbit rabbit = new Rabbit(world, false);
         Location rabbitLocation = new Location (2, 4);
         world.setTile(rabbitLocation, rabbit);
 
@@ -96,8 +96,8 @@ public class TestWolf extends TestSuper {
         Location denLocation = new Location(5, 5);
         world.setTile(denLocation, den);
 
-        Wolf alpha = new Wolf(false, den);
-        Wolf follower = new Wolf (false, den, alpha);
+        Wolf alpha = new Wolf(world, false, den);
+        Wolf follower = new Wolf (world, false, den, alpha);
         alpha.addFollower(follower);
         Location alphaLocation = new Location (2, 2);
         Location followerLocation = new Location (2, 3);

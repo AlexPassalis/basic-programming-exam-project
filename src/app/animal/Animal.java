@@ -10,15 +10,14 @@ public class Animal implements Actor {
     protected double energy;
     private boolean carcass_has_fungi;
 
-    public Animal(boolean carcass_has_fungi) {
+    public Animal(World world, boolean carcass_has_fungi) {
+        this.world = world;
         this.energy = 100;
         this.carcass_has_fungi = carcass_has_fungi;
     }
 
     @Override
     public void act(World world) {
-        this.world = world;
-
         move();
 
         if (this.energy <= 0){
@@ -37,7 +36,7 @@ public class Animal implements Actor {
 
     protected void eat() {}
 
-    protected void die() {
+    public void die() {
         Location death_location = world.getLocation(this);
         world.delete(this);
         Carcass animal_carcass = new Carcass(carcass_has_fungi);

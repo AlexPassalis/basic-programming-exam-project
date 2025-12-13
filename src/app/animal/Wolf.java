@@ -1,6 +1,8 @@
 package app.animal;
 
+import app.Carcass;
 import app.Den;
+import app.Edible;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Random;
 
-public class Wolf extends Predator {
+public class Wolf extends Predator implements Edible {
     private Den den;
     private boolean isAlpha;
     private Wolf alpha;
@@ -17,8 +19,8 @@ public class Wolf extends Predator {
     private int simulation_counts_reproducing;
     private Location reproducing_location;
 
-    public Wolf(boolean carcass_has_fungi, Den den, Wolf alpha) {
-        super(carcass_has_fungi);
+    public Wolf(World world, boolean carcass_has_fungi, Den den, Wolf alpha) {
+        super(world, carcass_has_fungi);
         this.den = den;
         this.isAlpha = false;
         this.alpha = alpha;
@@ -27,8 +29,8 @@ public class Wolf extends Predator {
         this.simulation_counts_reproducing = 0;
     }
 
-    public Wolf(boolean carcass_has_fungi, Den den) {
-        super(carcass_has_fungi);
+    public Wolf(World world, boolean carcass_has_fungi, Den den) {
+        super(world, carcass_has_fungi);
         this.den = den;
         this.isAlpha = true;
         this.followers = new ArrayList<>();
@@ -131,16 +133,20 @@ public class Wolf extends Predator {
                 if (best_tile != null) {
                     world.move(this, best_tile);
                 }
+
                 return;
             }
 
-            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 2);
+            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location);
 
             Location closest_alpha_location = null;
             int min_distance_alpha = Integer.MAX_VALUE;
 
             Location closest_rabbit_location = null;
             int min_distance_rabbit = Integer.MAX_VALUE;
+
+            Location closest_carcass_location = null;
+            int min_distance_carcass = Integer.MAX_VALUE;
 
             for (Location location : surrounding_tiles) {
                 Object tile = world.getTile(location);
@@ -169,12 +175,51 @@ public class Wolf extends Predator {
                         closest_rabbit_location = location;
                     }
                 }
+
+                if (tile instanceof Carcass) {
+                    int dx = Math.abs(location.getX() - current_location.getX());
+                    int dy = Math.abs(location.getY() - current_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < min_distance_carcass) {
+                        min_distance_carcass = distance;
+                        closest_carcass_location = location;
+                    }
+                }
             }
 
-            if (isHungry() && closest_rabbit_location != null) {
+            if (isHungry() && closest_carcass_location != null) {
+                if (min_distance_carcass == 1) {
+                    Carcass carcass = (Carcass) world.getTile(closest_carcass_location);
+                    eatCarcass(carcass, this);
+                    return;
+                }
+
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile : empty_tiles) {
+                    int dx = Math.abs(tile.getX() - closest_carcass_location.getX());
+                    int dy = Math.abs(tile.getY() - closest_carcass_location.getY());
+                    int distance = dx + dy;
+
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+
+                if (best_tile != null) {
+                    world.move(this, best_tile);
+                    return;
+                }
+            }
+
+            if (closest_rabbit_location != null) {
                 if (min_distance_rabbit == 1) {
                     Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
-                    eatRabbit(rabbit);
+                    kill(rabbit);
                     return;
                 }
 
@@ -229,7 +274,6 @@ public class Wolf extends Predator {
         }
 
         Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location);
-
         if (neighbour_empty_tiles.isEmpty()) {
             return;
         }
@@ -309,11 +353,6 @@ public class Wolf extends Predator {
 
     public void setEnergy(double energy) {
         this.energy = energy;
-    }
-
-    private void eatRabbit(Rabbit rabbit) {
-        world.delete(rabbit);
-        energy = energy + 50;
     }
 
     private boolean isHungry() {
@@ -406,7 +445,7 @@ public class Wolf extends Predator {
                 }
 
                 // Create new pup
-                Wolf pup = new Wolf(false, den, this);
+                Wolf pup = new Wolf(world,false, den, this);
                 addFollower(pup);
 
                 if (!exit_tiles.isEmpty()) {

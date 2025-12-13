@@ -189,7 +189,7 @@ public class Main {
                     entity = new Burrow();
                     break;
                 case "rabbit":
-                    entity = new Rabbit(carcass_has_fungi);
+                    entity = new Rabbit(world, carcass_has_fungi);
                     break;
                 case "wolf":
                     boolean isAlpha = i == 0;
@@ -198,19 +198,19 @@ public class Main {
                         wolf_den = new Den();
                         world.setTile(den_location, wolf_den);
 
-                        alpha_wolf = new Wolf(carcass_has_fungi, wolf_den);
+                        alpha_wolf = new Wolf(world, carcass_has_fungi, wolf_den);
                         entity = alpha_wolf;
                     } else {
-                        Wolf nonAlfaWolf = new Wolf(carcass_has_fungi, wolf_den, alpha_wolf);
+                        Wolf nonAlfaWolf = new Wolf(world, carcass_has_fungi, wolf_den, alpha_wolf);
                         alpha_wolf.addFollower(nonAlfaWolf);
                         entity = nonAlfaWolf;
                     }
                     break;
                 case "bear":
-                    entity = new Bear(carcass_has_fungi, location);
+                    entity = new Bear(world, carcass_has_fungi, location);
                     break;
                 case "berry":
-                    entity = new Berry(program);
+                    entity = new Berry();
                     break;
                 case "carcass":
                     entity = new Carcass(carcass_has_fungi);

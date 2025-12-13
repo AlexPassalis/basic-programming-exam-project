@@ -26,13 +26,13 @@ public class TestRabbit extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Rabbit(false), Rabbit.class);
+        testInitialization(new Rabbit(world, false), Rabbit.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testDeath(new Rabbit(false), Rabbit.class);
+        testDeath(new Rabbit(world, false), Rabbit.class);
     }
 
     @Test
@@ -43,7 +43,7 @@ public class TestRabbit extends TestSuper {
         Location rabbit_location = new Location(5, 5);
         Location grass_location = new Location(5, 6); // Adjacent to rabbit
 
-        Rabbit rabbit = new Rabbit(false);
+        Rabbit rabbit = new Rabbit(world, false);
         Grass grass = new Grass();
 
         world.setTile(rabbit_location, rabbit);
@@ -79,8 +79,8 @@ public class TestRabbit extends TestSuper {
         Location location1 = new Location(5, 5);
         Location location2 = new Location(7, 7);
 
-        Rabbit young_rabbit = new Rabbit(false);
-        Rabbit old_rabbit = new Rabbit(false);
+        Rabbit young_rabbit = new Rabbit(world, false);
+        Rabbit old_rabbit = new Rabbit(world, false);
 
         world.setTile(location1, young_rabbit);
         world.setTile(location2, old_rabbit);
@@ -126,8 +126,8 @@ public class TestRabbit extends TestSuper {
         Location location1 = new Location(5, 5);
         Location location2 = new Location(5, 6); // Adjacent to location1
 
-        Rabbit rabbit1 = new Rabbit(false);
-        Rabbit rabbit2 = new Rabbit(false);
+        Rabbit rabbit1 = new Rabbit(world, false);
+        Rabbit rabbit2 = new Rabbit(world, false);
 
         world.setTile(location1, rabbit1);
         world.setTile(location2, rabbit2);
@@ -189,7 +189,7 @@ public class TestRabbit extends TestSuper {
         world.setTile(burrowLocation, new Burrow());
 
         Location rabbitLocation = new Location (4, 6);
-        Rabbit rabbit = new Rabbit(false);
+        Rabbit rabbit = new Rabbit(world, false);
         world.setTile(rabbitLocation, rabbit);
 
         world.setNight();

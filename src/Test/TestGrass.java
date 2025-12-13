@@ -44,7 +44,7 @@ public class TestGrass extends TestSuper {
         world.setTile(center, grass);
 
         // Then, place a rabbit on top of the grass at the same location
-        Rabbit rabbit = new Rabbit(false);
+        Rabbit rabbit = new Rabbit(world,false);
         world.setTile(center, rabbit);
 
         // Verify that the location contains a non-blocking object (grass underneath)

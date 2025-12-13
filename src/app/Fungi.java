@@ -4,7 +4,7 @@ import itumulator.simulator.Actor;
 import itumulator.world.NonBlocking;
 import itumulator.world.World;
 
-public class Fungi implements Actor, NonBlocking {
+public class Fungi implements Actor, NonBlocking, Edible {
     public Fungi() {
 
     }

@@ -9,8 +9,8 @@ import itumulator.world.Location;
 import itumulator.world.NonBlocking;
 import itumulator.world.World;
 
-public class Carcass implements Actor, NonBlocking {
-    private double meat_amount;
+public class Carcass implements Actor, NonBlocking, Edible {
+    private int meat_amount;
     private Fungi fungi;
 
     public Carcass(boolean carcass_has_fungi) {
@@ -51,9 +51,9 @@ public class Carcass implements Actor, NonBlocking {
             }
         }
 
-        double meat_loss = 1;
+        int meat_loss = 1;
         if (hasMushroom()) {
-            double additional_meat_loss = 0.5;
+            int additional_meat_loss = 1;
             meat_loss = meat_loss + additional_meat_loss;
         }
         meat_amount = meat_amount - meat_loss;
@@ -61,5 +61,20 @@ public class Carcass implements Actor, NonBlocking {
 
     private boolean hasMushroom() {
         return fungi != null;
+    }
+
+    public int eatMeat(int meat_amount) {
+        if (meat_amount <= 0) {
+            return 0;
+        }
+
+        int current_meat_amount = getMeatAmount();
+        this.meat_amount = this.meat_amount - meat_amount;
+
+        return current_meat_amount;
+    }
+
+    public int getMeatAmount() {
+        return meat_amount;
     }
 }

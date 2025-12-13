@@ -1,20 +1,17 @@
 package app.animal;
 
-import app.Berry;
-import app.Carcass;
-import app.Fungi;
-import app.Grass;
+import app.*;
 import itumulator.world.Location;
 import itumulator.world.World;
 
 import java.util.*;
 
-public class Deer extends Animal {
+public class Deer extends Animal implements Edible {
     private int age;
     private int simulation_counts;
 
-    public Deer(boolean carcass_has_fungi) {
-        super(carcass_has_fungi);
+    public Deer(World world, boolean carcass_has_fungi) {
+        super(world, carcass_has_fungi);
         this.age = 0;
         this.simulation_counts = 0;
     }
@@ -23,24 +20,25 @@ public class Deer extends Animal {
     public void act(World world) {
         if (!world.isOnTile(this)) return;
 
-        this.world = world;
+        simulation_counts = simulation_counts + 1;
+        if (simulation_counts % 10 == 0) {
+            age = age + 1;
+        }
 
-        simulation_counts++;
-        if (simulation_counts % 10 == 0) age++;
-
-        super.act(world);   // movementLogic() + energy drain + death check
+        super.act(world);
         reproduce();
     }
 
     @Override
     protected void movementLogic() {
-        Location current = world.getLocation(this);
+        Location current_location = world.getLocation(this);
+        Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location);
+        if (surrounding_tiles.isEmpty()) {
+            return;
+        }
 
-        Set<Location> empty = world.getEmptySurroundingTiles(current);
-        if (empty.isEmpty()) return;
-
-        List<Location> options = filterUnsafeTiles(new ArrayList<>(empty));
-        if (options.isEmpty()) options = new ArrayList<>(empty);
+        List<Location> options = filterUnsafeTiles(new ArrayList<>(surrounding_tiles));
+        if (options.isEmpty()) options = new ArrayList<>(surrounding_tiles);
 
         Location best = chooseFoodTile(options);
         if (best == null) best = options.get(new Random().nextInt(options.size()));
@@ -49,13 +47,50 @@ public class Deer extends Animal {
         eatIfPossible(best);
     }
 
-    // private ()
+    private Location findNearbyPredator(int radius) {
+        Location current_location = world.getLocation(this);
+
+        for (Location surrounding_location : world.getSurroundingTiles(current_location, radius)) {
+            Object tile = world.getTile(surrounding_location);
+            if (tile instanceof Predator) {
+                return surrounding_location;
+            }
+        }
+
+        return null;
+    }
+
+    private Location fleeFromPredator() {
+
+        Location current_location = world.getLocation(this);
+        Location predator = findNearbyPredator(3);
+        if (predator == null) {
+            return null;
+        }
+
+        Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+        if (empty_tiles.isEmpty()) return null;
+
+        Location best = null;
+        int bestDistance = Integer.MIN_VALUE;
+
+        for (Location tile : empty_tiles) {
+            int dx = Math.abs(tile.getX() - predator.getX());
+            int dy = Math.abs(tile.getY() - predator.getY());
+            int distance = dx + dy;
+
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                best = tile;
+            }
+        }
+        return best;
+    }
 
     @Override
     protected void loseEnergyForMoving() {
-        double baseCost = 1.5;
-        double ageCost = 0.35 * age;
-        energy -= (baseCost + ageCost);
+        int energy_reduction = 2;
+        energy = energy - energy_reduction;
     }
 
     private void eatIfPossible(Location tile) {
@@ -75,12 +110,17 @@ public class Deer extends Animal {
 
     // Unik adfærd undgår carcasses når den ikke sulter
     private List<Location> filterUnsafeTiles(List<Location> tiles) {
-        if (isStarving()) return tiles; // hvis hjorten er sulten, så returner den alle tiles, også carcasses.
+        if (isStarving()) {
+            return tiles;
+        }
 
         List<Location> safe = new ArrayList<>();
-        for (Location t : tiles) {
-            if (!isNearCarcass(t)) safe.add(t);
+        for (Location tile : tiles) {
+            if (!isNearCarcass(tile)) {
+                safe.add(tile);
+            }
         }
+
         return safe;
     }
 
@@ -97,11 +137,11 @@ public class Deer extends Animal {
     }
 
     private Location chooseFoodTile(List<Location> options) {
-        for (Location t : options) {
-            Object food = world.getNonBlocking(t);
-            if (food instanceof Grass) return t;
-            if (food instanceof Berry) return t;
-            if (food instanceof Fungi) return t;
+        for (Location option : options) {
+            Object food = world.getNonBlocking(option);
+            if (food instanceof Fungi  || food instanceof Berry || food instanceof Grass) { // Prefers Fungi > Berry > Grass
+                return option;
+            }
         }
         return null;
     }
@@ -113,29 +153,32 @@ public class Deer extends Animal {
         double minEnergy = 70;
         if (energy < minEnergy) return;
 
-        Location loc = world.getLocation(this);
+        Location current_location = world.getLocation(this);
 
         Deer partner = null;
-        for (Location l : world.getSurroundingTiles(loc, 1)) {
+        for (Location l : world.getSurroundingTiles(current_location, 1)) {
             Object o = world.getTile(l);
             if (o instanceof Deer d && d.age >= minAge && d.energy >= minEnergy) {
                 partner = d;
                 break;
             }
         }
-        if (partner == null) return;
+        if (partner == null)
+            return;
 
-        if (this.hashCode() < partner.hashCode()) return;
+        if (this.hashCode() < partner.hashCode())
+            return;
 
-        Set<Location> empty = world.getEmptySurroundingTiles(loc);
-        if (empty.isEmpty()) return;
+        Set<Location> empty = world.getEmptySurroundingTiles(current_location);
+        if (empty.isEmpty())
+            return;
 
         List<Location> tiles = new ArrayList<>(empty);
-        Location babyLoc = tiles.get(new Random().nextInt(tiles.size()));
+        Location babyLocation = tiles.get(new Random().nextInt(tiles.size()));
 
-        world.setTile(babyLoc, new Deer(false));
+        world.setTile(babyLocation, new Deer(world,false));
 
-        energy -= 35;
-        partner.energy -= 35;
+        energy = energy - 35;
+        partner.energy = partner.energy - 35;
     }
 }
