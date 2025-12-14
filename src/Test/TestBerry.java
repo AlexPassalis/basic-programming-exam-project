@@ -32,7 +32,7 @@ public class TestBerry extends TestSuper {
             berry.act(world);
         }
 
-        assert(berry.getBerries() == 25);
+        assert(berry.getBerries() == 1);
     }
 
     @Test

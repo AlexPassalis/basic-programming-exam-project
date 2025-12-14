@@ -162,7 +162,7 @@ public class Deer extends Animal implements Edible {
     }
 
     /**
-     * Provides a method for  requirements for reproduction. The deer has to be a certain age and have a certain energy.
+     * Provides a method for requirements for reproduction. The deer has to be a certain age and have a certain energy.
      * The new baby deer is spawned at a possible empty tile from the deer with the biggest hashCode.
      */
     public void reproduce() {
