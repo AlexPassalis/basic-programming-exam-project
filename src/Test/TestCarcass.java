@@ -62,14 +62,5 @@ public class TestCarcass extends TestSuper {
           assertTrue(nonBlocking == null || !(nonBlocking instanceof Carcass));
       }
 
-//        Carcass carcass = new Carcass();
-//        Location spawn_location = new Location(3, 5);
-//        testInitialization(new Wolf(world, carcass), Wolf.class;
-//    }
-//
-//    @Test
-//    public void can_die() throws FileNotFoundException {
-//        setUp();
-//        testDeath(new Wolf(world), Wolf.class);
-//    }
+
 }

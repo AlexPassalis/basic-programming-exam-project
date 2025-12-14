@@ -49,9 +49,7 @@ public class Bear extends Predator {
             Object tile = world.getTile(location);
 
             if (tile instanceof Wolf) {
-                int dx = Math.abs(location.getX() - current_location.getX());
-                int dy = Math.abs(location.getY() - current_location.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(location, current_location);
 
                 if (distance < min_wolf_distance) {
                     min_wolf_distance = distance;
@@ -60,9 +58,7 @@ public class Bear extends Predator {
             }
 
             if (tile instanceof Rabbit) {
-                int dx = Math.abs(location.getX() - current_location.getX());
-                int dy = Math.abs(location.getY() - current_location.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(location, current_location);
 
                 if (distance < min_rabbit_distance) {
                     min_rabbit_distance = distance;
@@ -71,9 +67,7 @@ public class Bear extends Predator {
             }
 
             if (tile instanceof Carcass) {
-                int dx = Math.abs(location.getX() - current_location.getX());
-                int dy = Math.abs(location.getY() - current_location.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(location, current_location);
 
                 if (distance < min_carcass_distance) {
                     min_carcass_distance = distance;
@@ -82,9 +76,7 @@ public class Bear extends Predator {
             }
 
             if (tile instanceof Berry && ((Berry) tile).getBerries() > 0) {
-                int dx = Math.abs(location.getX() - current_location.getX());
-                int dy = Math.abs(location.getY() - current_location.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(location, current_location);
 
                 if (distance < min_berry_distance) {
                     min_berry_distance = distance;
@@ -120,9 +112,7 @@ public class Bear extends Predator {
             int best_distance = Integer.MAX_VALUE;
 
             for (Location tile : adjacent_tiles) {
-                int dx = Math.abs(tile.getX() - target_destination.getX());
-                int dy = Math.abs(tile.getY() - target_destination.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(tile, target_destination);
 
                 if (distance < best_distance) {
                     best_distance = distance;

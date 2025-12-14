@@ -36,10 +36,20 @@ public class Animal implements Actor {
 
     protected void eat() {}
 
+    protected int calculateManhattanDistance(Location from, Location to) {
+        int dx = Math.abs(from.getX() - to.getX());
+        int dy = Math.abs(from.getY() - to.getY());
+        return dx + dy;
+    }
+
     public void die() {
         Location death_location = world.getLocation(this);
         world.delete(this);
         Carcass animal_carcass = new Carcass(carcass_has_fungi);
         world.setTile(death_location, animal_carcass);
+    }
+
+    public void setEnergy(double energy) {
+        this.energy = energy;
     }
 }

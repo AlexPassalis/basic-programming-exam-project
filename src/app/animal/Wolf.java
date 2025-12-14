@@ -120,9 +120,7 @@ public class Wolf extends Predator implements Edible {
                 int best_distance = Integer.MAX_VALUE;
 
                 for (Location tile : empty_tiles) {
-                    int dx = Math.abs(tile.getX() - den_location.getX());
-                    int dy = Math.abs(tile.getY() - den_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(tile, den_location);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -154,9 +152,7 @@ public class Wolf extends Predator implements Edible {
                 if (tile instanceof Wolf) {
                     Wolf other_wolf = (Wolf) tile;
                     if (other_wolf.isAlpha() && other_wolf != this) {
-                        int dx = Math.abs(location.getX() - current_location.getX());
-                        int dy = Math.abs(location.getY() - current_location.getY());
-                        int distance = dx + dy;
+                        int distance = calculateManhattanDistance(location, current_location);
 
                         if (distance < min_distance_alpha) {
                             min_distance_alpha = distance;
@@ -166,9 +162,7 @@ public class Wolf extends Predator implements Edible {
                 }
 
                 if (tile instanceof Rabbit) {
-                    int dx = Math.abs(location.getX() - current_location.getX());
-                    int dy = Math.abs(location.getY() - current_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(location, current_location);
 
                     if (distance < min_distance_rabbit) {
                         min_distance_rabbit = distance;
@@ -177,9 +171,7 @@ public class Wolf extends Predator implements Edible {
                 }
 
                 if (tile instanceof Carcass) {
-                    int dx = Math.abs(location.getX() - current_location.getX());
-                    int dy = Math.abs(location.getY() - current_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(location, current_location);
 
                     if (distance < min_distance_carcass) {
                         min_distance_carcass = distance;
@@ -200,9 +192,7 @@ public class Wolf extends Predator implements Edible {
                 int best_distance = Integer.MAX_VALUE;
 
                 for (Location tile : empty_tiles) {
-                    int dx = Math.abs(tile.getX() - closest_carcass_location.getX());
-                    int dy = Math.abs(tile.getY() - closest_carcass_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(tile, closest_carcass_location);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -228,9 +218,7 @@ public class Wolf extends Predator implements Edible {
                 int best_distance = Integer.MAX_VALUE;
 
                 for (Location tile : empty_tiles) {
-                    int dx = Math.abs(tile.getX() - closest_rabbit_location.getX());
-                    int dy = Math.abs(tile.getY() - closest_rabbit_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(tile, closest_rabbit_location);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -256,9 +244,7 @@ public class Wolf extends Predator implements Edible {
                 int best_distance = Integer.MAX_VALUE;
 
                 for (Location tile : empty_tiles) {
-                    int dx = Math.abs(tile.getX() - closest_alpha_location.getX());
-                    int dy = Math.abs(tile.getY() - closest_alpha_location.getY());
-                    int distance = dx + dy;
+                    int distance = calculateManhattanDistance(tile, closest_alpha_location);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -300,9 +286,7 @@ public class Wolf extends Predator implements Edible {
                     Location closest_tile = null;
                     int min_distance = Integer.MAX_VALUE;
                     for (Location tile : tiles) {
-                        int dx = Math.abs(tile.getX() - den_location.getX());
-                        int dy = Math.abs(tile.getY() - den_location.getY());
-                        int distance = dx + dy;
+                        int distance = calculateManhattanDistance(tile, den_location);
 
                         if (distance < min_distance) {
                             min_distance = distance;
@@ -319,9 +303,7 @@ public class Wolf extends Predator implements Edible {
                     Location closest_tile = null;
                     int min_distance = Integer.MAX_VALUE;
                     for (Location tile : tiles) {
-                        int dx = Math.abs(tile.getX() - alpha_location.getX());
-                        int dy = Math.abs(tile.getY() - alpha_location.getY());
-                        int distance = dx + dy;
+                        int distance = calculateManhattanDistance(tile, alpha_location);
 
                         if (distance < min_distance) {
                             min_distance = distance;
@@ -349,10 +331,6 @@ public class Wolf extends Predator implements Edible {
     protected void loseEnergyForMoving() {
         int energy_reduction = 2;
         energy = energy - energy_reduction;
-    }
-
-    public void setEnergy(double energy) {
-        this.energy = energy;
     }
 
     private boolean isHungry() {

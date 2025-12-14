@@ -44,10 +44,7 @@ public class Rabbit extends Animal implements Edible {
         int min_distance = Integer.MAX_VALUE;
         for (Burrow borr : burrows) {
             Location burrow_location = entities_in_world.get(borr);
-            int dx = Math.abs(rabbit_location.getX() - burrow_location.getX());
-            int dy = Math.abs(rabbit_location.getY() - burrow_location.getY());
-
-            int distance = dx + dy;
+            int distance = calculateManhattanDistance(rabbit_location, burrow_location);
             if (distance < min_distance) { // If this burrow is closer, update the closest_burrow variable.
                 min_distance = distance;
                 closest_burrow = borr;
@@ -109,9 +106,7 @@ public class Rabbit extends Animal implements Edible {
             Location closest_tile = null;
             int min_distance = Integer.MAX_VALUE;
             for (Location tile : tiles) { // Find the closest tile towards the Burrow.
-                int dx = Math.abs(tile.getX() - burrow_location.getX());
-                int dy = Math.abs(tile.getY() - burrow_location.getY());
-                int distance = dx + dy;
+                int distance = calculateManhattanDistance(tile, burrow_location);
 
                 if (distance < min_distance) {
                     min_distance = distance;
@@ -214,10 +209,6 @@ public class Rabbit extends Animal implements Edible {
     // Setter methods for testing purposes
     public void setAge(int age) {
         this.age = age;
-    }
-
-    public void setEnergy(double energy) {
-        this.energy = energy;
     }
 
     public void reproductionEnergyCost() {

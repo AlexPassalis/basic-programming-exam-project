@@ -1,9 +1,6 @@
 package app;
 
-import app.animal.Animal;
-import app.animal.Bear;
-import app.animal.Rabbit;
-import app.animal.Wolf;
+import app.animal.*;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.NonBlocking;
@@ -16,7 +13,7 @@ public class Carcass implements Actor, NonBlocking, Edible {
     public Carcass(boolean carcass_has_fungi) {
         this.meat_amount = 10;
         if (carcass_has_fungi) {
-            fungi = new Fungi();
+            fungi = new Fungi(meat_amount);
         }
     }
 
@@ -27,8 +24,10 @@ public class Carcass implements Actor, NonBlocking, Edible {
             meat_amount = 10;
         } else if (animal instanceof Wolf) {
             meat_amount = 20;
-        } else if (animal instanceof Bear) { // TODO the Bear never dies, add the Dear here instead
-            meat_amount = 20;
+        } else if (animal instanceof Deer) {
+            meat_amount = 25;
+        } else if (animal instanceof Bear) {
+            meat_amount = 30;
         } else {
             throw new IllegalArgumentException("Invalid animal type: " + animal.getClass().getSimpleName());
         }
@@ -36,7 +35,7 @@ public class Carcass implements Actor, NonBlocking, Edible {
         this.meat_amount = meat_amount;
 
         if (carcass_has_fungi) {
-            fungi = new Fungi();
+            fungi = new Fungi(meat_amount);
         }
     }
 
@@ -46,20 +45,19 @@ public class Carcass implements Actor, NonBlocking, Edible {
             Location death_location = world.getLocation(this);
             world.delete(this);
             if (this.fungi != null) {
-                Fungi carcass_fungi = new Fungi();
-                world.setTile(death_location, carcass_fungi);
+                world.setTile(death_location, fungi);
             }
         }
 
         int meat_loss = 1;
-        if (hasMushroom()) {
+        if (hasFungi()) {
             int additional_meat_loss = 1;
             meat_loss = meat_loss + additional_meat_loss;
         }
         meat_amount = meat_amount - meat_loss;
     }
 
-    private boolean hasMushroom() {
+    public boolean hasFungi() {
         return fungi != null;
     }
 
@@ -76,5 +74,11 @@ public class Carcass implements Actor, NonBlocking, Edible {
 
     public int getMeatAmount() {
         return meat_amount;
+    }
+
+    public void getInfectedByFungi() {
+        if (fungi == null) {
+            fungi = new Fungi(meat_amount);
+        }
     }
 }

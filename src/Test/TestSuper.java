@@ -1,6 +1,7 @@
 package test;
 
 import app.*;
+import app.animal.Animal;
 import app.animal.Rabbit;
 import app.animal.Wolf;
 import itumulator.simulator.Actor;
@@ -61,10 +62,8 @@ public class TestSuper {
         world.setTile(center, actor);
 
         // Set the actor's energy to 0 to trigger death
-        if (actor instanceof Rabbit) {
-            ((Rabbit) actor).setEnergy(0);
-        } else if (actor instanceof Wolf) {
-            ((Wolf) actor).setEnergy(0);
+        if (actor instanceof Animal) {
+            ((Animal) actor).setEnergy(0);
         }
 
         // Trigger the actor's act method to check if it dies due to no energy

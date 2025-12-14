@@ -3,6 +3,7 @@ package app;
 import java.awt.Color;
 
 import app.animal.Bear;
+import app.animal.Deer;
 import app.animal.Rabbit;
 import app.animal.Wolf;
 import itumulator.executable.DisplayInformation;
@@ -21,12 +22,12 @@ import java.util.*;
 - Use abstract class in Animal for the functions that do not have a body
 - Use interfaces for e.g. eatable, for the rabbit and grass ...
 - Split the code into modules, e.g. Animals and Nonblocking elements
-
 */
 
 public class Main {
     public static Program program;
     public static World world;
+    private static boolean isTesting;
 
     public static void main(String[] args) throws FileNotFoundException {
         if (args.length == 0) {
@@ -35,17 +36,31 @@ public class Main {
         } // If the user does not provide the file path that Main will generate the world out of, notify him.
         String filepath = args[0];
 
-        boolean isTesting = false;
+        isTesting = false;
         if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
         } // Use this boolean for test specific configuration.
 
+        ParseInputFileReturnType input_file_info = parseInputFile(filepath);
+        configureWorld(input_file_info);
 
+        int simulation_counts = 200;
+        runProgram(simulation_counts);
+    }
+
+    private static class ParseInputFileReturnType {
+        int size;
+        HashMap<String, HashMap<String, Integer>> data;
+
+        ParseInputFileReturnType(int size, HashMap<String, HashMap<String, Integer>> data) {
+            this.size = size;
+            this.data = data;
+        }
+    }
+
+    private static ParseInputFileReturnType parseInputFile(String filepath) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(filepath));
         int size = scanner.nextInt(); // The size of the world defined in the input file.
-        int display_size = 800;
-        int delay = isTesting ? 15 : 300;
-        int simulations_count = 200;
 
         HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
 
@@ -105,11 +120,28 @@ public class Main {
             String unique_key = type + "_" + line_number;
             data.put(unique_key, values);
         }
+
         scanner.close();
+
+        ParseInputFileReturnType result = new ParseInputFileReturnType(size, data);
+        return result;
+    }
+
+    private static void configureWorld(ParseInputFileReturnType input_file_info) {
+        int size = input_file_info.size;
+        int display_size = 800;
+        int delay = isTesting ? 15 : 300;
 
         program = new Program(size, display_size, delay);
         world = program.getWorld();
 
+        configureDisplayInformation();
+
+        HashMap<String, HashMap<String, Integer>> data = input_file_info.data;
+        initializeAllObjects(data);
+    }
+
+    private static void configureDisplayInformation() {
         DisplayInformation GrassInfo = new DisplayInformation(Color.green, "custom-grass");
         program.setDisplayInformation(Grass.class, GrassInfo);
         DisplayInformation RabbitInfo = new DisplayInformation(Color.gray, "custom-rabbit");
@@ -128,7 +160,11 @@ public class Main {
         program.setDisplayInformation(Carcass.class, CarcassInfo);
         DisplayInformation FungiInfo = new DisplayInformation(Color.green, "fungi");
         program.setDisplayInformation(Fungi.class, FungiInfo);
+        DisplayInformation DeerInfo = new DisplayInformation(Color.LIGHT_GRAY, "deer");
+        program.setDisplayInformation(Deer.class, DeerInfo);
+    }
 
+    private static void initializeAllObjects(HashMap<String, HashMap<String, Integer>> data) {
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String unique_key = actor.getKey();
             String type = unique_key.split("_")[0]; // Extract "wolf" from "wolf_2"
@@ -149,27 +185,12 @@ public class Main {
 
             boolean carcass_has_fungi = count.getOrDefault("fungi", 0) == 1; // default to 0 since, it might be null
 
-            initialize(type, amount, spawn_location, carcass_has_fungi);
-        }
-
-        if (!isTesting) {
-            program.show();
-        }
-
-        for (int i = 0; i < simulations_count; i++) {
-            program.simulate();
-            try {
-                Thread.sleep(delay);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
+            initializeSingleObject(type, amount, spawn_location, carcass_has_fungi);
         }
     }
 
-    private static void initialize(String type, int amount, Location spawn_location, boolean carcass_has_fungi) {
-        // Create a single den for all wolves in this group
-        Den wolf_den = null;
+    private static void initializeSingleObject(String type, int amount, Location spawn_location, boolean carcass_has_fungi) {
+        Den wolf_den = null; // Create a single den for all wolves in this group
         Wolf alpha_wolf = null;
 
         for (int i = 0; i < amount; i = i + 1) {
@@ -215,6 +236,9 @@ public class Main {
                 case "carcass":
                     entity = new Carcass(carcass_has_fungi);
                     break;
+                case "deer":
+                    entity = new Deer(world, carcass_has_fungi);
+                    break;
                 default:
                     throw new IllegalArgumentException("Invalid entity type: " + type);
             }
@@ -223,7 +247,7 @@ public class Main {
         }
     }
 
-    private static Location getEmptyLocation( ) {
+    private static Location getEmptyLocation() {
         Random randon_number = new Random();
         int size = world.getSize();
 
@@ -257,8 +281,20 @@ public class Main {
         return location;
     }
 
-    public static Program getProgram() {
-        return program;
+    private static void runProgram(int simulation_counts) {
+        if (!isTesting) {
+            program.show();
+        }
+
+        for (int i = 0; i < simulation_counts; i++) {
+            program.simulate();
+            try {
+                Thread.sleep(program.getDelay());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
     }
 
     public static World getWorld() {
