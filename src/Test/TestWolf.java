@@ -13,15 +13,13 @@ public class TestWolf extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        Den den = new Den();
-        testInitialization(new Wolf(world, false, den), Wolf.class);
+        testInitialization(new Wolf(world, false, new Den()));
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        Den den = new Den();
-        testDeath(new Wolf(world, false, den), Wolf.class);
+        testAnimalDeath(new Wolf(world, false, new Den()));
     }
 
     @Test

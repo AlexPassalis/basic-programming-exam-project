@@ -1,6 +1,5 @@
 package test;
 
-import app.Main;
 import app.animal.Bear;
 import app.animal.Rabbit;
 import app.Berry;
@@ -16,8 +15,13 @@ public class TestBear extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        Location spawn_location = new Location(3, 5);
-        testInitialization(new Bear(world, false, spawn_location), Bear.class);
+        testInitialization(new Bear(world, false, new Location(0, 0)));
+    }
+
+    @Test
+    public void can_die() throws FileNotFoundException {
+        setUp();
+        testAnimalDeath(new Rabbit(world, false));
     }
 
     @Test
@@ -39,6 +43,7 @@ public class TestBear extends TestSuper {
             assert distance <= territoryRadius;
         }
     }
+
     @Test
     public void bear_hunts_in_territory() throws FileNotFoundException {
         setUp("src/data/empty-world-mini.txt");
@@ -60,6 +65,7 @@ public class TestBear extends TestSuper {
         assertTrue(rabbitKilled);
         assertTrue(world.contains(bear));
     }
+
     @Test
     public void bear_eats_berries () throws Exception {
         setUp();

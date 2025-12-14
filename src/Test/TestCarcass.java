@@ -8,23 +8,16 @@ import app.Carcass;
 import itumulator.world.*;
 
 import java.io.FileNotFoundException;
-import java.util.Map;
 
 public class TestCarcass extends TestSuper {
-      @Test
-      public void gets_initialised() throws FileNotFoundException {
-          setUp();
+    @Test
+    public void gets_initialised() throws FileNotFoundException {
+        setUp();
+        testInitialization(new Carcass(false));
+    }
 
-          Location location = new Location (2,2);
-          Carcass carcass = new Carcass(false);
-          world.setTile(location, carcass);
-
-          Object nonBlocking = world.getNonBlocking(location);
-          assertTrue(nonBlocking instanceof Carcass);
-      }
-
-        @Test
-        public void animal_becomes_carcass_and_can_be_eaten() throws FileNotFoundException {
+    @Test
+    public void animal_becomes_carcass_and_can_be_eaten() throws FileNotFoundException {
           setUp();
 
           Location rabbitLocation = new Location(4,4);
@@ -44,6 +37,7 @@ public class TestCarcass extends TestSuper {
 
           assertTrue(carcass.getMeatAmount() < initialMeat);
       }
+
       @Test
       public void carcass_can_disappear () throws FileNotFoundException {
           setUp();
@@ -61,6 +55,4 @@ public class TestCarcass extends TestSuper {
           Object nonBlocking = world.getNonBlocking(location);
           assertTrue(nonBlocking == null || !(nonBlocking instanceof Carcass));
       }
-
-
 }

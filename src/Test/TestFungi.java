@@ -12,6 +12,12 @@ import java.util.Map;
 
 public class TestFungi extends TestSuper {
     @Test
+    public void gets_initialised() throws FileNotFoundException {
+        setUp();
+        testInitialization(new Fungi(10));
+    }
+
+    @Test
     public void carcass_with_fungi_spawns_fungi () throws FileNotFoundException {
         setUp("src/data/week-3/tf3-1a.txt");
 

@@ -202,10 +202,6 @@ public class Rabbit extends Animal implements Edible {
         return age;
     }
 
-    public double getEnergy() {
-        return energy;
-    }
-
     // Setter methods for testing purposes
     public void setAge(int age) {
         this.age = age;

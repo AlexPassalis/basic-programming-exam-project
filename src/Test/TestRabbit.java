@@ -10,29 +10,16 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRabbit extends TestSuper {
-    private Location findEmptyTile() {
-        int size = world.getSize();
-        for (int x = 0; x < size; x++) {
-        for (int y = 0; y < size; y++) {
-            Location l = new Location(x,y);
-            if (world.isTileEmpty(l) && !world.containsNonBlocking(l)) {
-                return l;
-            }
-        }
-        }
-        return null;
-    }
-
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Rabbit(world, false), Rabbit.class);
+        testInitialization(new Rabbit(world, false));
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testDeath(new Rabbit(world, false), Rabbit.class);
+        testAnimalDeath(new Rabbit(world, false));
     }
 
     @Test

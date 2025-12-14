@@ -7,7 +7,7 @@ import itumulator.world.World;
 
 public class Animal implements Actor {
     World world;
-    protected double energy;
+    protected static double energy;
     private boolean carcass_has_fungi;
 
     public Animal(World world, boolean carcass_has_fungi) {
@@ -34,7 +34,7 @@ public class Animal implements Actor {
         loseEnergyForMoving();
     }
 
-    protected void eat() {}
+    public static void eat() {}
 
     protected int calculateManhattanDistance(Location from, Location to) {
         int dx = Math.abs(from.getX() - to.getX());
@@ -47,6 +47,10 @@ public class Animal implements Actor {
         world.delete(this);
         Carcass animal_carcass = new Carcass(carcass_has_fungi);
         world.setTile(death_location, animal_carcass);
+    }
+
+    public static double getEnergy() {
+        return energy;
     }
 
     public void setEnergy(double energy) {

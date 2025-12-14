@@ -8,6 +8,6 @@ public class TestBurrow extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Burrow(), Burrow.class);
+        testInitialization(new Burrow());
     }
 }

@@ -1,6 +1,7 @@
 package test;
 import app.*;
 
+import app.animal.Rabbit;
 import itumulator.world.World;
 import itumulator.executable.DisplayInformation;
 import itumulator.executable.Program;
@@ -8,9 +9,17 @@ import itumulator.world.Location;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBerry extends TestSuper {
+    @Test
+    public void gets_initialised() throws FileNotFoundException {
+        setUp();
+        testInitialization(new Berry());
+    }
+
     @Test
     public void berries_regrow() throws Exception {
         setUp();

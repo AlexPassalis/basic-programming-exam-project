@@ -13,7 +13,7 @@ public class TestGrass extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Grass(), Grass.class);
+        testInitialization(new Grass());
     }
 
     @Test

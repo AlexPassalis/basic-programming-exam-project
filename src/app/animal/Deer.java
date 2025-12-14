@@ -202,4 +202,8 @@ public class Deer extends Animal implements Edible {
         energy = energy - 35;
         partner.energy = partner.energy - 35;
     }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
 }

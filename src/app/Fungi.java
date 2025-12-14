@@ -23,10 +23,11 @@ public class Fungi implements Actor, NonBlocking, Edible, Mortal {
 
         if (simulation_counts_left <= 0) {
             die(world);
-        } else {
+            return;
+        }
             spread(world);
             simulation_counts_left = simulation_counts_left - 1;
-        }
+
     }
 
     private void spread(World world) {
