@@ -104,6 +104,26 @@ public class Deer extends Animal implements Edible {
         int energy_reduction = 2;
         energy = energy - energy_reduction;
     }
+    public static void eat() {
+        World world = Main.getWorld();
+        Map<Object, Location> entities = world.getEntities();
+
+        for (Map.Entry<Object, Location> entry: entities.entrySet()) {
+            if (entry.getKey() instanceof Deer) {
+                Deer deer = (Deer) entry.getKey();
+                Location deerLocation = entry.getValue();
+
+                for (Location location: world.getSurroundingTiles(deerLocation)) {
+                    Object food = world.getNonBlocking(location);
+                    if (food instanceof Grass) {
+                        world.delete(food);
+                        deer.energy = deer.energy + 20;
+                        return;
+                    }
+                }
+            }
+        }
+    }
 
     private void eatIfPossible(Location tile) { // Provides a method for the amount of energy a deer gets when eating.
         Object food = world.getNonBlocking(tile);

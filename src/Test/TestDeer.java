@@ -1,4 +1,4 @@
-package test;
+package Test;
 
 import app.Grass;
 import app.animal.Deer;
@@ -25,7 +25,7 @@ public class TestDeer extends TestSuper {
     }
 
     @Test
-    public void eats_grass() throws FileNotFoundException {
+    public void deer_eats_grass() throws FileNotFoundException {
         setUp();
 
         // Create a Deer and grass at adjacent locations
@@ -39,13 +39,13 @@ public class TestDeer extends TestSuper {
         world.setTile(grass_location, grass);
 
         // Record deer's initial energy
-        double initial_energy = Deer.getEnergy();
+        double initial_energy = deer.getEnergy();
 
         // Make the deer eat the grass
         Deer.eat();
 
         // Verify deer's energy increased after eating
-        double energy_after_eating = Deer.getEnergy();
+        double energy_after_eating = deer.getEnergy();
         assertTrue(energy_after_eating > initial_energy);
 
         // Verify the grass was deleted from the world

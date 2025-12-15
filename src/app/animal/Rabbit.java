@@ -60,7 +60,7 @@ public class Rabbit extends Animal implements Edible {
             return;
         }
 
-        if (simulation_counts == 1) {
+        if (burrow == null) {
             burrow = getClosestBurrow(); // Attach the closest borrow to the rabbit.
         }
 
@@ -84,6 +84,7 @@ public class Rabbit extends Animal implements Edible {
     }
 
     private void sleep() {
+
         double energy_multiplier = 1.25;
         energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
     }

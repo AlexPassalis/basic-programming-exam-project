@@ -45,8 +45,11 @@ public class Carcass implements Actor, NonBlocking, Edible {
             Location death_location = world.getLocation(this);
             world.delete(this);
             if (this.fungi != null) {
-                world.setTile(death_location, fungi);
+                this.fungi = new Fungi(meat_amount);
+
             }
+            world.setTile(death_location, fungi);
+            return;
         }
 
         int meat_loss = 1;
@@ -66,10 +69,10 @@ public class Carcass implements Actor, NonBlocking, Edible {
             return 0;
         }
 
-        int current_meat_amount = getMeatAmount();
-        this.meat_amount = this.meat_amount - meat_amount;
+        int eaten = Math.min(meat_amount, this.meat_amount);
+        this.meat_amount = this.meat_amount - eaten;
 
-        return current_meat_amount;
+        return eaten;
     }
 
     public int getMeatAmount() {

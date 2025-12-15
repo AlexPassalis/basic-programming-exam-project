@@ -1,13 +1,14 @@
 package app.animal;
 
 import app.Carcass;
+import app.Main;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
 
 public class Animal implements Actor {
     World world;
-    protected static double energy;
+    protected double energy;
     private boolean carcass_has_fungi;
 
     public Animal(World world, boolean carcass_has_fungi) {
@@ -49,10 +50,9 @@ public class Animal implements Actor {
         world.setTile(death_location, animal_carcass);
     }
 
-    public static double getEnergy() {
+    public double getEnergy() {
         return energy;
     }
-
     public void setEnergy(double energy) {
         this.energy = energy;
     }

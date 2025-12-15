@@ -135,7 +135,7 @@ public class Wolf extends Predator implements Edible {
                 return;
             }
 
-            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location);
+            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 5);
 
             Location closest_alpha_location = null;
             int min_distance_alpha = Integer.MAX_VALUE;
@@ -177,6 +177,28 @@ public class Wolf extends Predator implements Edible {
                         min_distance_carcass = distance;
                         closest_carcass_location = location;
                     }
+                }
+            }
+            if (closest_rabbit_location != null) {
+                if (min_distance_rabbit == 1) {
+                    Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
+                    kill(rabbit);
+                    return;
+                }
+                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+                Location best_tile = null;
+                int best_distance = Integer.MAX_VALUE;
+
+                for (Location tile: empty_tiles) {
+                    int distance = calculateManhattanDistance(tile, closest_rabbit_location);
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        best_tile = tile;
+                    }
+                }
+                if (best_tile !=null) {
+                    world.move(this, best_tile);
+                    return;
                 }
             }
 
@@ -259,17 +281,20 @@ public class Wolf extends Predator implements Edible {
             }
         }
 
-        Set<Location> neighbour_empty_tiles = world.getEmptySurroundingTiles(current_location);
-        if (neighbour_empty_tiles.isEmpty()) {
+        Set<Location> neighbour_tiles = world.getSurroundingTiles(current_location);
+        if (neighbour_tiles.isEmpty()) {
             return;
         }
 
-        List<Location> tiles = new ArrayList<>(neighbour_empty_tiles);
+        List<Location> tiles = new ArrayList<>(neighbour_tiles);
 
         if (isAlpha) {
-            int randomIndex = new Random().nextInt(tiles.size());
-            Location randomTile = tiles.get(randomIndex);
-            world.move(this, randomTile);
+            if (followers == null || followers.isEmpty()) {
+                int randomIndex = new Random().nextInt(tiles.size());
+                Location randomTile = tiles.get(randomIndex);
+                world.move(this, randomTile);
+            }
+            return;
         } else {
             try {
                 // Check if alpha is reproducing - move to den instead
@@ -314,7 +339,7 @@ public class Wolf extends Predator implements Edible {
                     if (closest_tile != null) {
                         world.move(this, closest_tile);
                     }
-                } else {
+                } else if (alpha == null || !world.contains(alpha) || !world.isOnTile(alpha)){
                     int randomIndex = new Random().nextInt(tiles.size());
                     Location randomTile = tiles.get(randomIndex);
                     world.move(this, randomTile);
@@ -429,6 +454,9 @@ public class Wolf extends Predator implements Edible {
                 if (!exit_tiles.isEmpty()) {
                     Location pup_location = exit_tiles.iterator().next();
                     world.setTile(pup_location, pup);
+                } else {
+                    // fallback: place pup on den tile
+                    world.setTile(den_location, pup);
                 }
             }
         }

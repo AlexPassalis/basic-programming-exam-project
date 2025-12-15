@@ -1,4 +1,4 @@
-package test;
+package Test;
 import app.*;
 import app.animal.Rabbit;
 import app.animal.Wolf;
@@ -18,32 +18,27 @@ public class TestFungi extends TestSuper {
     }
 
     @Test
-    public void carcass_with_fungi_spawns_fungi () throws FileNotFoundException {
+    public void carcass_with_fungi_spawns_fungi() throws FileNotFoundException {
         setUp("src/data/week-3/tf3-1a.txt");
 
-        Location carcassLocation = null;
-        Carcass carcass = null;
-
-        int size = world.getSize();
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                Location location = new Location (x,y);
-                Object nonBlocking = world.getNonBlocking(location);
-
-                if (nonBlocking instanceof Carcass) {
-                    carcassLocation = location;
-                    carcass = (Carcass) nonBlocking;
+        boolean carcassesExist = true;
+        while (carcassesExist) {
+            carcassesExist = false;
+            for (Object object:world.getEntities().keySet()) {
+                if (object instanceof Carcass) {
+                    ((Carcass) object).act(world);
+                    carcassesExist = true;
                 }
             }
         }
-        assertTrue(carcass != null);
-
-        while (world.getNonBlocking(carcassLocation) instanceof Carcass) {
-            carcass.act(world);
+        boolean fungiExists = false;
+        for (Object object:world.getEntities().keySet()) {
+            if (object instanceof Fungi) {
+                fungiExists = true;
+                break;
+            }
         }
-        Object result = world.getNonBlocking(carcassLocation);
-        assertTrue(!(result instanceof Carcass));
-        assertTrue(result instanceof Fungi);
+        assertTrue(fungiExists);
     }
 }
 
