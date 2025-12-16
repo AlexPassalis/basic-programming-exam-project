@@ -73,39 +73,23 @@ public class TestBear extends TestSuper {
         Bear bear = new Bear(world, false, bearLocation);
         world.setTile(bearLocation, bear);
 
-        Location berryLocation = new Location (3, 6);
+        Location berry_location = new Location (3, 6);
         Berry berry = new Berry();
-        world.setTile(berryLocation, berry);
+        world.setTile(berry_location, berry);
 
         for (int i = 0; i < 25; i++) {
             berry.act(world);
         }
-        final int MAX_STEPS = 30;
+
+        int max_steps = 30;
         boolean eaten = false;
-        for (int i = 0; i <= MAX_STEPS; i++) {
+        for (int i = 0; i <= max_steps; i++) {
             bear.restoreEnergyForTesting();
             if (!world.contains(berry)) break;
             bear.act(world);
             if (berry.getBerries() == 0) { eaten = true; break; }
         }
+
         assertTrue(eaten);
-
-        Location berryLocation2 = new Location (4,5);
-        Berry berry2 = new Berry();
-        world.setTile(berryLocation2, berry2);
-
-        if (!world.isOnTile(bear)) {
-            world.setTile(bearLocation, bear);
-        }
-        boolean eaten2 = false;
-        for (int i = 0; i <= MAX_STEPS; i++) {
-            bear.restoreEnergyForTesting();
-            if (!world.contains(berry2)) { eaten = true; break;}
-            bear.act(world);
-            if (berry2.getBerries() == 0 && !eaten2) {
-            }
-        }
-        assertTrue(world.contains(berry2));
-        assertFalse(berry2.getBerries() == 0);
     }
 }

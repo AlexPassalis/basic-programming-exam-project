@@ -56,7 +56,7 @@ public class Rabbit extends Animal implements Edible {
 
     @Override
     public void act(World world) {
-        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
+        if (!world.isOnTile(this) && sleeping_location == null) { // Don't act if having been eaten (but not just sleeping)
             return;
         }
 
@@ -64,27 +64,28 @@ public class Rabbit extends Animal implements Edible {
             burrow = getClosestBurrow(); // Attach the closest borrow to the rabbit.
         }
 
-        if (sleeping_location != null) {
-            sleep();
-            return;
-        }
-
-        if (!world.isNight()) {
-            this.wakeUp(); // Wake the rabbit up if it is not night anymore.
-        }
-
-        super.act(world);
-
-        reproduce();
-
         simulation_counts = simulation_counts + 1; // Count how many program simulations the rabbit has been alive for.
         if (simulation_counts % 10 == 0) { // Age the rabbit by 1 year every 10 program simulations.
             age = age + 1;
         }
+
+        if (sleeping_location != null) {
+            if (!world.isNight()) {
+                wakeUp(); // Wake the rabbit up if it is not night anymore.
+            } else {
+                sleep();
+            }
+        }
+
+        if (!world.isOnTile(this)) {
+            return; // The rabbit is sleeping or did not find a tile to wake up to
+        }
+
+        reproduce();
+        super.act(world);
     }
 
     private void sleep() {
-
         double energy_multiplier = 1.25;
         energy = energy * (1 + energy_multiplier); // The rabbit gains energy from being asleep.
     }
@@ -145,10 +146,6 @@ public class Rabbit extends Animal implements Edible {
     }
 
     public void reproduce() {
-        if (sleeping_location != null) {
-            return;
-        }
-
         int min_reproduction_age = 5;
         if (age < min_reproduction_age) {
             return;

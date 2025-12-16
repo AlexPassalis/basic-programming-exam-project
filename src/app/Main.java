@@ -45,7 +45,7 @@ public class Main {
         configureWorld(input_file_info);
 
         int simulation_counts = 200;
-        runProgram(simulation_counts);
+        runProgram(simulation_counts, filepath);
     }
 
     private static class ParseInputFileReturnType {
@@ -130,7 +130,7 @@ public class Main {
     private static void configureWorld(ParseInputFileReturnType input_file_info) {
         int size = input_file_info.size;
         int display_size = 800;
-        int delay = isTesting ? 15 : 300;
+        int delay = isTesting ? 10 : 750;
 
         program = new Program(size, display_size, delay);
         world = program.getWorld();
@@ -281,18 +281,23 @@ public class Main {
         return location;
     }
 
-    private static void runProgram(int simulation_counts) {
+    private static void runProgram(int simulation_counts, String filepath) {
         if (!isTesting) {
             program.show();
         }
 
+        ArrayList<String> problematic_filepaths = new ArrayList<>(List.of("src/data/week-2/t2-3a.txt", "src/data/week-2/t2-4b.txt", "src/data/week-2/tf2-1.txt", "src/data/week-2/tf2-2.txt", "src/data/week-3/tf3-2a.txt", "src/data/week-3/tf3-3ab.txt"));
+
         for (int i = 0; i < simulation_counts; i++) {
             program.simulate();
-            try {
-                Thread.sleep(program.getDelay());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+
+            if (problematic_filepaths.contains(filepath)) {
+                try {
+                    Thread.sleep(program.getDelay());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
     }

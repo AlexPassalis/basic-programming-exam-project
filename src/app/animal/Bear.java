@@ -159,9 +159,9 @@ public class Bear extends Predator {
         world.move(this, next);
     }
 
-    // --------------------------------------------------
-    // TERRITORY (SAFE, NO OUT-OF-BOUNDS)
-    // --------------------------------------------------
+
+    // TERRITORY
+
     private Set<Location> getTerritoryTiles() {
         Set<Location> tiles = new HashSet<>();
         int size = world.getSize();
@@ -181,9 +181,9 @@ public class Bear extends Predator {
         return tiles;
     }
 
-    // --------------------------------------------------
+
     // ENERGY
-    // --------------------------------------------------
+
     @Override
     protected void loseEnergyForMoving() {
         energy -= 5;
@@ -193,9 +193,9 @@ public class Bear extends Predator {
         energy = 100;
     }
 
-    // --------------------------------------------------
+
     // BERRIES
-    // --------------------------------------------------
+ 
     private void eatBerries(Berry berry) {
         if (energy >= 100) {
             return;

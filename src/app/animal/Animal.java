@@ -1,7 +1,6 @@
 package app.animal;
 
 import app.Carcass;
-import app.Main;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
@@ -47,7 +46,9 @@ public class Animal implements Actor {
         Location death_location = world.getLocation(this);
         world.delete(this);
         Carcass animal_carcass = new Carcass(carcass_has_fungi);
-        world.setTile(death_location, animal_carcass);
+        if (!world.containsNonBlocking(death_location)) {
+            world.setTile(death_location, animal_carcass);
+        }
     }
 
     public double getEnergy() {

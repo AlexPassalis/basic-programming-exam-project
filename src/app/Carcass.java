@@ -44,11 +44,9 @@ public class Carcass implements Actor, NonBlocking, Edible {
         if (meat_amount <= 0) {
             Location death_location = world.getLocation(this);
             world.delete(this);
-            if (this.fungi != null) {
-                this.fungi = new Fungi(meat_amount);
-
+            if (fungi != null) {
+                world.setTile(death_location, fungi);
             }
-            world.setTile(death_location, fungi);
             return;
         }
 
