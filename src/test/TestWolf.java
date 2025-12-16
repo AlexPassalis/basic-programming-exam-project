@@ -31,25 +31,23 @@ public class TestWolf extends TestSuper {
 
         Wolf alpha = new Wolf(world, false, den);
         Wolf follower = new Wolf(world, false, den, alpha);
-        alpha.addFollower(follower);
 
         Location alphaStart = new Location(2, 2);
         Location followerStart = new Location (2, 4);
         world.setTile(alphaStart, alpha);
         world.setTile(followerStart, follower);
-        alpha.act(world);
-        follower.act(world);
+
+        for (int i = 0; i < 10; i = i + 1) {
+            program.simulate();
+        }
 
         Location alphaNew = world.getLocation(alpha);
         Location followerNew = world.getLocation(follower);
 
-        int oldDistance = Math.abs(alphaStart.getX() - followerStart.getX()) +
-                Math.abs(alphaStart.getY() - followerStart.getY());
-
-        int newDistance = Math.abs(alphaNew.getX() - followerNew.getX()) +
+        int distance = Math.abs(alphaNew.getX() - followerNew.getX()) +
                 Math.abs(alphaNew.getY() - followerNew.getY());
 
-        assert newDistance < oldDistance;
+        assertTrue(distance <= 2);
     }
 
     @Test

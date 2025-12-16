@@ -11,31 +11,32 @@ public class TestFungi extends TestSuper {
     @Test
     public void gets_initialised() throws FileNotFoundException {
         setUp();
-        testInitialization(new Fungi(10));
+        testInitialization(new Fungi(20));
     }
 
     @Test
     public void carcass_with_fungi_spawns_fungi() throws FileNotFoundException {
         setUp("src/data/week-3/tf3-1a.txt");
 
-        boolean carcassesExist = true;
-        while (carcassesExist) {
-            carcassesExist = false;
-            for (Object object:world.getEntities().keySet()) {
-                if (object instanceof Carcass) {
-                    ((Carcass) object).act(world);
-                    carcassesExist = true;
-                }
+        int number_of_carcasses = 0;
+        for (Object entity : world.getEntities().keySet()) {
+            if  (entity instanceof Carcass) {
+                number_of_carcasses = number_of_carcasses + 1;
             }
         }
-        boolean fungiExists = false;
-        for (Object object:world.getEntities().keySet()) {
-            if (object instanceof Fungi) {
-                fungiExists = true;
-                break;
+        assertTrue(number_of_carcasses >= 5 && number_of_carcasses <= 8);
+
+        for (int i = 0; i < 10; i = i + 1) {
+            program.simulate();
+        }
+
+        int number_of_fungi = 0;
+        for (Object entity : world.getEntities().keySet()) {
+            if (entity instanceof Fungi) {
+                number_of_fungi = number_of_fungi + 1;
             }
         }
-        assertTrue(fungiExists);
+        assertEquals(number_of_carcasses, number_of_fungi);
     }
 }
 

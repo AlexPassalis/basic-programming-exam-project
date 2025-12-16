@@ -12,7 +12,7 @@ public class Fungi implements Actor, NonBlocking, Edible, Mortal {
 
     public Fungi(int meat_amount) {
         int lifetime_per_meat_amount = 3;
-        simulation_counts_left = meat_amount *  lifetime_per_meat_amount;
+        simulation_counts_left = meat_amount * lifetime_per_meat_amount;
     }
 
     @Override

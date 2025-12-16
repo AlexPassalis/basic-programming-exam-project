@@ -25,8 +25,8 @@ import java.util.*;
 */
 
 public class Main {
-    public static Program program;
-    public static World world;
+    private static Program program;
+    private static World world;
     private static boolean isTesting;
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -198,7 +198,7 @@ public class Main {
             if (spawn_location != null) {
                 location = spawn_location;
             } else {
-                location = type.equals("grass") || type.equals("burrow") || type.equals("berry") || type.equals("carcass")? getEmptyNonBlockingLocation() : getEmptyLocation();
+                location = type.equals("grass") || type.equals("burrow") || type.equals("berry") || type.equals("carcass") ? getEmptyNonBlockingLocation() : getEmptyLocation();
             }
 
             Object entity;
@@ -304,5 +304,9 @@ public class Main {
 
     public static World getWorld() {
         return world;
+    }
+
+    public static Program getProgram() {
+        return program;
     }
 }

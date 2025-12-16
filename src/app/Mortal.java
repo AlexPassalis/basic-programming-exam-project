@@ -4,6 +4,6 @@ import itumulator.world.World;
 
 public interface Mortal {
     default void die(World world) {
-        world.remove(this);
+        world.delete(this);
     }
 }

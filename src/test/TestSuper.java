@@ -2,6 +2,7 @@ package test;
 
 import app.*;
 import app.animal.Animal;
+import itumulator.executable.Program;
 import itumulator.world.Location;
 import itumulator.world.World;
 import org.junit.jupiter.api.AfterEach;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestSuper {
+    public Program program;
     public World world;
     public boolean rabbit_can_die;
 
@@ -22,8 +24,9 @@ public class TestSuper {
     }
 
     public void setUp(String filepath) throws FileNotFoundException {
-        Main.main(new String[]{filepath, "true"}); //We pass the full file path to load the map
-        world = Main.getWorld(); //Retrieves the World instance created by Main
+        Main.main(new String[]{filepath, "true"});
+        program = Main.getProgram();
+        world = Main.getWorld();
     }
 
     @AfterEach
@@ -54,27 +57,21 @@ public class TestSuper {
 
     // Helper method to test if an animal dies when energy reaches 0
     protected void testAnimalDeath(Animal animal) {
-        // Create the entity at a specific location
         Location location = new Location(0, 0);
         world.setTile(location, animal);
 
-        // Set the animal's energy to 0 to trigger death
-        animal.setEnergy(0);
-
-        // Trigger the animal's act method to check if it dies due to no energy
-        animal.act(world);
+        animal.setEnergy(0); // Set the animal's energy to 0 to trigger death
+        animal.act(world); // Trigger the animal's act method to check if it dies due to no energy
+        assertFalse(world.contains(animal));
 
         // Check if any animals of this type exist in the world
-        Map<Object, Location> entities = world.getEntities();
         boolean world_has_animal = false;
-        for (Object entity : entities.keySet()) {
+        for (Object entity : world.getEntities().keySet()) {
             if (animal.getClass().isInstance(entity)) {
                 world_has_animal = true;
                 break;
             }
         }
-
-        // Assert that no animals of this type remain (the animal died)
-        assertFalse(world_has_animal);
+        assertFalse(world_has_animal); // Assert that no animals of this type remain (the animal died)
     }
 }

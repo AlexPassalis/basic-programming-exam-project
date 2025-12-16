@@ -90,6 +90,7 @@ public class Wolf extends Predator implements Edible {
                 }
             }
             die();
+            return;
         }
 
         super.act(world);

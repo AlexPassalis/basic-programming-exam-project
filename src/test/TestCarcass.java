@@ -39,7 +39,7 @@ public class TestCarcass extends TestSuper {
       }
 
       @Test
-      public void carcass_can_disappear () throws FileNotFoundException {
+      public void carcass_can_disappear() throws FileNotFoundException {
           setUp();
           Location location = new Location(3,3);
           Carcass carcass = new Carcass(false);

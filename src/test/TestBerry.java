@@ -25,11 +25,15 @@ public class TestBerry extends TestSuper {
         world.setTile(location, berry);
         assert(berry.getBerries() == 0); // Does not have any berries at spawn time
 
-        for (int i = 0; i < 25; i++) {
-            berry.act(world);
+        for (int i = 0; i < 10; i = i + 1) {
+            program.simulate();
         }
-
         assert(berry.getBerries() == 1);
+
+        for (int i = 0; i < 10; i = i + 1) {
+            program.simulate();
+        }
+        assert(berry.getBerries() == 2);
     }
 
     @Test
