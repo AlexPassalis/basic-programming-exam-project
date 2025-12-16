@@ -1,13 +1,10 @@
-package Test;
+package test;
 import app.*;
-import app.animal.Rabbit;
-import app.animal.Wolf;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import app.Carcass;
-import itumulator.world.*;
+
 import java.io.FileNotFoundException;
-import java.util.Map;
 
 
 public class TestFungi extends TestSuper {

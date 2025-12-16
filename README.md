@@ -124,7 +124,7 @@ Once you've overridden method act with this method above and run your simulation
 Therefore your tasks now are:
 - Use **World's** delete method to remove persons when night falls.
 - Ensure that the location where persons move next is completely random; here class **Random** from standard library can help give random numbers.
-- What happens when there are no available spaces? Does your program behave as expected? Test this by implementing a JUnit test.
+- What happens when there are no available spaces? Does your program behave as expected? test this by implementing a JUnit test.
 
 To solve these three tasks, you should read more about class **World**. We recommend reading its associated Java documentation and familiarizing yourself with various options provided by this class; understanding these is essential for moving forward.
 
@@ -213,7 +213,7 @@ public class PersonTest {
 Now we're ready for our actual test! Name them such that it's clear what they assess:
 
 ```java
-@Test
+@test
 public void personMovesDuringDay(){
     Person p = new Person(); // The person we're using for testing.
     Location l = new Location(0,0); // The location we're using.

@@ -1,10 +1,7 @@
-package Test;
+package test;
 import app.*;
 
-import app.animal.Rabbit;
-import itumulator.world.World;
 import itumulator.executable.DisplayInformation;
-import itumulator.executable.Program;
 import itumulator.world.Location;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

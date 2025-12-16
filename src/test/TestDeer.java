@@ -1,4 +1,4 @@
-package Test;
+package test;
 
 import app.Grass;
 import app.animal.Deer;

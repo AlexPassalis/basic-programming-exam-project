@@ -1,4 +1,4 @@
-package Test;
+package test;
 import app.*;
 
 import app.animal.Animal;

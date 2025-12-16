@@ -1,10 +1,7 @@
-package Test;
+package test;
 
 import app.*;
 import app.animal.Animal;
-import app.animal.Rabbit;
-import app.animal.Wolf;
-import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
 import org.junit.jupiter.api.AfterEach;
