@@ -1,0 +1,4 @@
+10
+deer 3-4
+grass 5
+rabbit 2

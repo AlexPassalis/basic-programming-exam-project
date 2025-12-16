@@ -1,0 +1,4 @@
+15
+deer 2
+wolf 4
+bear 1

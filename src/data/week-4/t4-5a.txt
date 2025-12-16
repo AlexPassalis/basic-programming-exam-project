@@ -1,0 +1,8 @@
+15
+deer 3
+rabbit 2
+grass 5-6
+carcass fungi 2
+wolf 3
+den 1
+carcass 3
