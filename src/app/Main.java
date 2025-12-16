@@ -286,14 +286,14 @@ public class Main {
             program.show();
         }
 
-        ArrayList<String> problematic_filepaths = new ArrayList<>(List.of("src/data/week-2/t2-3a.txt", "src/data/week-2/t2-4b.txt", "src/data/week-2/tf2-1.txt", "src/data/week-2/tf2-2.txt", "src/data/week-3/tf3-2a.txt", "src/data/week-3/tf3-3ab.txt"));
+        ArrayList<String> problematic_filepaths = new ArrayList<>(List.of("src/data/week-2/t2-3a.txt", "src/data/week-2/t2-4b.txt", "src/data/week-2/t2-5a.txt"));
 
         for (int i = 0; i < simulation_counts; i++) {
             program.simulate();
 
             if (problematic_filepaths.contains(filepath)) {
                 try {
-                    Thread.sleep(program.getDelay());
+                    Thread.sleep(400);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;

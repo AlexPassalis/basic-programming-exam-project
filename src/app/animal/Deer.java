@@ -18,7 +18,9 @@ public class Deer extends Animal implements Edible {
 
     @Override
     public void act(World world) {
-        if (!world.isOnTile(this)) return; // Checks if deer is dead. If it is indeed dead, then the program returns.
+        if (!world.isOnTile(this)) {
+            return;
+        }
 
         simulation_counts = simulation_counts + 1; // For every 10 ticks or simulation counts, the deer will age 1 year.
         if (simulation_counts % 10 == 0) {
@@ -101,7 +103,7 @@ public class Deer extends Animal implements Edible {
      */
     @Override
     protected void loseEnergyForMoving() {
-        int energy_reduction = 2;
+        int energy_reduction = 3;
         energy = energy - energy_reduction;
     }
     public static void eat() {

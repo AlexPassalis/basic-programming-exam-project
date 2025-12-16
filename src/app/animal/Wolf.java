@@ -58,46 +58,41 @@ public class Wolf extends Predator implements Edible {
         return followers;
     }
 
-    public Wolf getAlpha() {
-        return alpha;
-    }
-
     @Override
     public void act(World world) {
+        if (!world.isOnTile(this) && reproducing_location == null) {
+            return;
+        }
+
         if (simulation_counts_reproducing > 0) {
             simulation_counts_reproducing = simulation_counts_reproducing - 1;
-            if (simulation_counts_reproducing == 0) {
+            if (simulation_counts_reproducing == 0 && isAlpha) {
                 exitDenAfterReproduction();
             }
-            return;
         }
 
-        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
-            return;
-        }
-
-        super.act(world);
-
-        if (!isAlpha) {
+        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten or still in den
             return;
         }
 
         if (!is_reproduction_time) {
-            double reproduction_chance = 0.1;
+            double reproduction_chance = 0.03;
             double dice = new Random().nextDouble(1);
             if (dice < reproduction_chance) {
                 is_reproduction_time = true;
             }
         }
 
-        if (energy <= 0 && followers != null) {
-            for (Wolf wolf : followers) {
-                try {
-                    world.delete(wolf);
-                } catch (IllegalArgumentException e) {
+        if (energy <= 0) {
+            if (isAlpha) {
+                for (Wolf wolf : followers) {
+                    wolf.die();
                 }
             }
+            die();
         }
+
+        super.act(world);
     }
 
     @Override
@@ -105,7 +100,7 @@ public class Wolf extends Predator implements Edible {
         Location current_location = world.getLocation(this);
 
         if (isAlpha) {
-            if (is_reproduction_time) {
+            if (!followers.isEmpty() && is_reproduction_time) {
                 Location den_location = world.getLocation(den);
 
                 // Check if wolf reached the den
@@ -281,72 +276,69 @@ public class Wolf extends Predator implements Edible {
             }
         }
 
-        Set<Location> neighbour_tiles = world.getSurroundingTiles(current_location);
-        if (neighbour_tiles.isEmpty()) {
+        if (isAlpha) {
+            // Alpha with no followers moves randomly
+            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+            if (empty_tiles.isEmpty()) {
+                return;
+            }
+            List<Location> tiles_list = new ArrayList<>(empty_tiles);
+            int randomIndex = new Random().nextInt(tiles_list.size());
+            Location randomTile = tiles_list.get(randomIndex);
+            world.move(this, randomTile);
             return;
         }
+        // Follower movement logic
+        // Check if alpha is reproducing - move to den instead
+        if (alpha != null && alpha.is_reproduction_time) {
+            Location den_location = world.getLocation(den);
 
-        List<Location> tiles = new ArrayList<>(neighbour_tiles);
-
-        if (isAlpha) {
-            if (followers == null || followers.isEmpty()) {
-                int randomIndex = new Random().nextInt(tiles.size());
-                Location randomTile = tiles.get(randomIndex);
-                world.move(this, randomTile);
+            // Check if follower reached the den
+            if (current_location.equals(den_location)) {
+                enterDenForReproduction(current_location);
+                return;
             }
-            return;
-        } else {
-            try {
-                // Check if alpha is reproducing - move to den instead
-                if (alpha != null && alpha.is_reproduction_time) {
-                    Location den_location = world.getLocation(den);
 
-                    // Check if follower reached the den
-                    if (current_location.equals(den_location)) {
-                        enterDenForReproduction(current_location);
-                        return;
-                    }
+            // Move towards den
+            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+            Location closest_tile = null;
+            int min_distance = Integer.MAX_VALUE;
+            for (Location tile : empty_tiles) {
+                int distance = calculateManhattanDistance(tile, den_location);
 
-                    // Move towards den
-                    Location closest_tile = null;
-                    int min_distance = Integer.MAX_VALUE;
-                    for (Location tile : tiles) {
-                        int distance = calculateManhattanDistance(tile, den_location);
-
-                        if (distance < min_distance) {
-                            min_distance = distance;
-                            closest_tile = tile;
-                        }
-                    }
-
-                    if (closest_tile != null) {
-                        world.move(this, closest_tile);
-                    }
-                } else if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
-                    Location alpha_location = world.getLocation(alpha);
-
-                    Location closest_tile = null;
-                    int min_distance = Integer.MAX_VALUE;
-                    for (Location tile : tiles) {
-                        int distance = calculateManhattanDistance(tile, alpha_location);
-
-                        if (distance < min_distance) {
-                            min_distance = distance;
-                            closest_tile = tile;
-                        }
-                    }
-
-                    if (closest_tile != null) {
-                        world.move(this, closest_tile);
-                    }
-                } else if (alpha == null || !world.contains(alpha) || !world.isOnTile(alpha)){
-                    int randomIndex = new Random().nextInt(tiles.size());
-                    Location randomTile = tiles.get(randomIndex);
-                    world.move(this, randomTile);
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    closest_tile = tile;
                 }
-            } catch (IllegalArgumentException e) {
-                int randomIndex = new Random().nextInt(tiles.size());
-                Location randomTile = tiles.get(randomIndex);
+            }
+
+            if (closest_tile != null) {
+                world.move(this, closest_tile);
+            }
+        } else if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
+            Location alpha_location = world.getLocation(alpha);
+
+            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+            Location closest_tile = null;
+            int min_distance = Integer.MAX_VALUE;
+            for (Location tile : empty_tiles) {
+                int distance = calculateManhattanDistance(tile, alpha_location);
+
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    closest_tile = tile;
+                }
+            }
+
+            if (closest_tile != null) {
+                world.move(this, closest_tile);
+            }
+        } else if (alpha == null || !world.contains(alpha) || !world.isOnTile(alpha)){
+            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+            if (!empty_tiles.isEmpty()) {
+                List<Location> empty_list = new ArrayList<>(empty_tiles);
+                int randomIndex = new Random().nextInt(empty_list.size());
+                Location randomTile = empty_list.get(randomIndex);
                 world.move(this, randomTile);
             }
         }
@@ -359,7 +351,28 @@ public class Wolf extends Predator implements Edible {
     }
 
     private boolean isHungry() {
-        return energy < 50;
+        return energy < 70;
+    }
+
+    @Override
+    public void eatCarcass(Carcass carcass, Animal animal) {
+        double meat_available = carcass.getMeatAmount();
+        if (meat_available <= 0) {
+            return;
+        }
+
+        int meat_amount = 4;
+        int meat_consumed = carcass.eatMeat(meat_amount);
+        if (meat_consumed > 0) {
+            double energy_per_meat_consumed = 2; // 2 energy per meat consumed from the carcass
+            double energy_addition = energy_per_meat_consumed * meat_consumed;
+            energy = energy + energy_addition;
+
+            // Followers gain the same energy
+            for (Wolf follower : followers) {
+                follower.energy = follower.energy + energy_addition;
+            }
+        }
     }
 
     private void fightAlpha(Wolf other_alpha) {
@@ -408,19 +421,10 @@ public class Wolf extends Predator implements Edible {
         reproducing_location = location;
         world.remove(this);
 
-        if (isAlpha) {
-            simulation_counts_reproducing = 25;
-        } else {
-            simulation_counts_reproducing = 1;
-        }
+        simulation_counts_reproducing = 15;
     }
 
     public void exitDenAfterReproduction() {
-        if (!isAlpha) {
-            simulation_counts_reproducing = 0;
-            return;
-        }
-
         if (reproducing_location != null) {
             Location den_location = world.getLocation(den);
             Set<Location> exit_tiles = world.getEmptySurroundingTiles(den_location);

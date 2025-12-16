@@ -13,6 +13,10 @@ import java.util.*;
 public class Grass implements Actor, NonBlocking, Edible {
     @Override
     public void act(World world) {
+        if (!world.isOnTile(this)) {
+            return;
+        }
+        
         spread(world);
     }
 

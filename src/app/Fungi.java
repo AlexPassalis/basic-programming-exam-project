@@ -17,7 +17,7 @@ public class Fungi implements Actor, NonBlocking, Edible, Mortal {
 
     @Override
     public void act(World world) {
-        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
+        if (!world.isOnTile(this)) {
             return;
         }
 
@@ -25,9 +25,9 @@ public class Fungi implements Actor, NonBlocking, Edible, Mortal {
             die(world);
             return;
         }
-            spread(world);
-            simulation_counts_left = simulation_counts_left - 1;
 
+        spread(world);
+        simulation_counts_left = simulation_counts_left - 1;
     }
 
     private void spread(World world) {

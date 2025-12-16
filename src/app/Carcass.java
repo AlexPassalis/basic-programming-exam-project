@@ -6,12 +6,12 @@ import itumulator.world.Location;
 import itumulator.world.NonBlocking;
 import itumulator.world.World;
 
-public class Carcass implements Actor, NonBlocking, Edible {
+public class Carcass implements Actor, NonBlocking, Edible, Mortal {
     private int meat_amount;
     private Fungi fungi;
 
     public Carcass(boolean carcass_has_fungi) {
-        this.meat_amount = 10;
+        this.meat_amount = 20;
         if (carcass_has_fungi) {
             fungi = new Fungi(meat_amount);
         }
@@ -21,13 +21,13 @@ public class Carcass implements Actor, NonBlocking, Edible {
         int meat_amount;
 
         if (animal instanceof Rabbit) {
-            meat_amount = 10;
-        } else if (animal instanceof Wolf) {
             meat_amount = 20;
+        } else if (animal instanceof Wolf) {
+            meat_amount = 40;
         } else if (animal instanceof Deer) {
-            meat_amount = 25;
+            meat_amount = 50;
         } else if (animal instanceof Bear) {
-            meat_amount = 30;
+            meat_amount = 60;
         } else {
             throw new IllegalArgumentException("Invalid animal type: " + animal.getClass().getSimpleName());
         }
@@ -41,10 +41,14 @@ public class Carcass implements Actor, NonBlocking, Edible {
 
     @Override
     public void act(World world) {
+        if (!world.isOnTile(this)) {
+            return;
+        }
+
         if (meat_amount <= 0) {
             Location death_location = world.getLocation(this);
-            world.delete(this);
-            if (fungi != null) {
+            die(world);
+            if (fungi != null && !world.containsNonBlocking(death_location)) {
                 world.setTile(death_location, fungi);
             }
             return;

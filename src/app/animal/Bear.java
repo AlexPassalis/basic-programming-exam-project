@@ -2,205 +2,169 @@ package app.animal;
 
 import app.Berry;
 import app.Carcass;
-import itumulator.world.Location;
 import itumulator.world.World;
+import itumulator.world.Location;
 
 import java.util.*;
 
-/**
- * Bear:
- * - Stays within a Manhattan-radius territory of its spawn location
- * - Hunts in priority order: Wolf > Rabbit > Carcass > Berry
- * - Eats berries only when it reaches them
- */
 public class Bear extends Predator {
+    private Location spawn_location;
 
-    private final Location spawnLocation;
-    private static final int TERRITORY_RADIUS = 3;
-    private boolean hasEatenBerry = false;
-
-    public Bear(World world, boolean carcassHasFungi, Location spawnLocation) {
-        super(world, carcassHasFungi);
-        this.spawnLocation = spawnLocation;
+    public Bear(World world, boolean carcass_has_fungi, Location spawn_location) {
+        super(world, carcass_has_fungi);
+        this.spawn_location = spawn_location;
     }
 
     @Override
     public void act(World world) {
-        if (!world.isOnTile(this)) {
+        if (!world.isOnTile(this)) { // Don't act if having been removed e.g. eaten
             return;
         }
+
         super.act(world);
     }
 
-    // --------------------------------------------------
-    // MOVEMENT LOGIC
-    // --------------------------------------------------
     @Override
     protected void movementLogic() {
-
-        Location current = world.getLocation(this);
-
-        // 1) Eat berries if standing on them
-        Object currentNonBlocking = world.getNonBlocking(current);
-        if (currentNonBlocking instanceof Berry) {
-            Berry berry = (Berry) currentNonBlocking;
-            if (berry.getBerries() > 0) {
-                eatBerries(berry);
-                hasEatenBerry = true;
-                return;
-            }
+        int territory_radius = 3;
+        Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, territory_radius);
+        if (territory_tiles.size() < 1) {
+            return;
         }
 
-        // 2) Build territory (safe, bounded)
-        Set<Location> territory = getTerritoryTiles();
+        Location current_location = world.getLocation(this);
 
-        // 3) Find closest targets
-        Location closestWolf = null;
-        Location closestRabbit = null;
-        Location closestCarcass = null;
-        Location closestBerry = null;
+        Location closest_wolf_location = null;
+        int min_wolf_distance = Integer.MAX_VALUE;
 
-        int wolfDist = Integer.MAX_VALUE;
-        int rabbitDist = Integer.MAX_VALUE;
-        int carcassDist = Integer.MAX_VALUE;
-        int berryDist = Integer.MAX_VALUE;
+        Location closest_rabbit_location = null;
+        int min_rabbit_distance = Integer.MAX_VALUE;
 
-        for (Location loc : territory) {
-            Object tile = world.getTile(loc);
-            int dist = calculateManhattanDistance(current, loc);
+        Location closest_carcass_location = null;
+        int min_carcass_distance = Integer.MAX_VALUE;
 
-            if (tile instanceof Wolf && dist < wolfDist) {
-                wolfDist = dist;
-                closestWolf = loc;
+        Location closest_berry_location = null;
+        int min_berry_distance = Integer.MAX_VALUE;
+
+        for (Location location : territory_tiles) {
+            Object tile = world.getTile(location);
+
+            if (tile instanceof Wolf) {
+                int distance = calculateManhattanDistance(location, current_location);
+
+                if (distance < min_wolf_distance) {
+                    min_wolf_distance = distance;
+                    closest_wolf_location = location;
+                }
             }
 
-            if (tile instanceof Rabbit && dist < rabbitDist) {
-                rabbitDist = dist;
-                closestRabbit = loc;
+            if (tile instanceof Rabbit) {
+                int distance = calculateManhattanDistance(location, current_location);
+
+                if (distance < min_rabbit_distance) {
+                    min_rabbit_distance = distance;
+                    closest_rabbit_location = location;
+                }
             }
 
-            if (tile instanceof Carcass && dist < carcassDist) {
-                carcassDist = dist;
-                closestCarcass = loc;
+            if (tile instanceof Carcass) {
+                int distance = calculateManhattanDistance(location, current_location);
+
+                if (distance < min_carcass_distance) {
+                    min_carcass_distance = distance;
+                    closest_carcass_location = location;
+                }
             }
 
-            if (tile instanceof Berry) {
-                Berry berry = (Berry) tile;
-                if (berry.getBerries() > 0 && dist < berryDist) {
-                    berryDist = dist;
-                    closestBerry = loc;
+            if (tile instanceof Berry && ((Berry) tile).getBerries() > 0) {
+                int distance = calculateManhattanDistance(location, current_location);
+
+                if (distance < min_berry_distance) {
+                    min_berry_distance = distance;
+                    closest_berry_location = location;
                 }
             }
         }
 
-        // 4) Choose target by priority
-        Location target = null;
+        // Movement priority: Wolf > Rabbit > Carcass > Bush > Random
+        Location target_destination = null;
 
-        if (closestWolf != null) {
-            target = closestWolf;
-        } else if (closestRabbit != null) {
-            target = closestRabbit;
-        } else if (closestCarcass != null) {
-            target = closestCarcass;
-        } else if (closestBerry != null) {
-            target = closestBerry;
+        if (closest_wolf_location != null) {
+            target_destination = closest_wolf_location;
+        } else if (closest_rabbit_location != null) {
+            target_destination = closest_rabbit_location;
+        } else if (closest_carcass_location != null) {
+            target_destination = closest_carcass_location;
+        } else if (closest_berry_location != null) {
+            target_destination = closest_berry_location;
         }
 
-        // 5) Get valid adjacent moves (stay in territory)
-        Set<Location> neighbours = world.getSurroundingTiles(current);
-        neighbours.retainAll(territory);
-
-        if (neighbours.isEmpty()) {
+        // Move one tile towards target or move randomly
+        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
+        if (adjacent_tiles.isEmpty()) {
             return;
         }
 
-        // 6) Pick next tile
-        Location next = null;
+        Location next_tile = null;
 
-        if (target != null) {
-            int best = Integer.MAX_VALUE;
-            for (Location loc : neighbours) {
-                int d = calculateManhattanDistance(loc, target);
-                if (d < best) {
-                    best = d;
-                    next = loc;
+        if (target_destination != null) {
+            // Find adjacent tile closest to target
+            int best_distance = Integer.MAX_VALUE;
+
+            for (Location tile : adjacent_tiles) {
+                int distance = calculateManhattanDistance(tile, target_destination);
+
+                if (distance < best_distance) {
+                    best_distance = distance;
+                    next_tile = tile;
                 }
             }
         } else {
-            List<Location> list = new ArrayList<>(neighbours);
-            next = list.get(new Random().nextInt(list.size()));
+            // No target, move randomly
+            List<Location> list = new ArrayList<>(adjacent_tiles);
+            int index = new Random().nextInt(list.size());
+            next_tile = list.get(index);
         }
 
-        if (next == null) {
-            return;
-        }
+        if (next_tile != null) {
+            Object tile_at_new_location = world.getTile(next_tile);
 
-        // 7) Interact with tile
-        Object tile = world.getTile(next);
-
-        if (tile instanceof Rabbit || tile instanceof Wolf) {
-            kill((Animal) tile);
-            world.move(this, next);
-            return;
-        }
-
-        if (tile instanceof Carcass) {
-            eatCarcass((Carcass) tile, this);
-        }
-
-        if (tile instanceof Berry) {
-            Berry berry = (Berry) tile;
-            if (berry.getBerries() > 0) {
-                eatBerries(berry);
+            if (tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
+                Animal animal = (Animal) tile_at_new_location;
+                kill(animal);
                 return;
-            }
-        }
-
-        world.move(this, next);
-    }
-
-
-    // TERRITORY
-
-    private Set<Location> getTerritoryTiles() {
-        Set<Location> tiles = new HashSet<>();
-        int size = world.getSize();
-
-        for (int dx = -TERRITORY_RADIUS; dx <= TERRITORY_RADIUS; dx++) {
-            for (int dy = -TERRITORY_RADIUS; dy <= TERRITORY_RADIUS; dy++) {
-                if (Math.abs(dx) + Math.abs(dy) <= TERRITORY_RADIUS) {
-                    int x = spawnLocation.getX() + dx;
-                    int y = spawnLocation.getY() + dy;
-
-                    if (x >= 0 && x < size && y >= 0 && y < size) {
-                        tiles.add(new Location(x, y));
-                    }
+            } else if (tile_at_new_location instanceof Carcass) {
+                Carcass carcass = (Carcass) tile_at_new_location;
+                eatCarcass(carcass, this);
+                return;
+            } else if (tile_at_new_location instanceof Berry) {
+                Berry berry = (Berry) tile_at_new_location;
+                int berry_count = berry.getBerries();
+                if (berry_count > 0) {
+                    eatBerries(berry, berry_count);
+                    return;
                 }
             }
+
+            if (world.isTileEmpty(next_tile)) {
+                world.move(this, next_tile);
+            }
         }
-        return tiles;
     }
-
-
-    // ENERGY
 
     @Override
     protected void loseEnergyForMoving() {
-        energy -= 5;
+        int energy_lost_for_moving = 4;
+        energy = energy - energy_lost_for_moving;
     }
 
-    public void restoreEnergyForTesting() {
-        energy = 100;
+    public void restoreEnergyForTesting() { // Method for testing purposes
+        this.energy = 100;
     }
 
-
-    // BERRIES
- 
-    private void eatBerries(Berry berry) {
-        if (energy >= 100) {
-            return;
-        }
-        energy = Math.min(100, energy + 30);
+    private void eatBerries(Berry berry, int berry_count) {
+        int energy_per_berry = 20;
+        energy = energy + (berry_count * energy_per_berry);
         berry.getEaten(world);
     }
 }

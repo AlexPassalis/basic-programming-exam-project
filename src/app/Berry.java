@@ -18,7 +18,7 @@ public class Berry implements Actor, NonBlocking, Edible, DynamicDisplayInformat
     public void act (World world) {
         simulation_counts = simulation_counts + 1;
 
-        if (simulation_counts % 25 == 0) {
+        if (simulation_counts % 10 == 0) {
             berries = berries + 1;
         }
     }

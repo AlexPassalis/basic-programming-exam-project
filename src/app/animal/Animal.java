@@ -44,7 +44,9 @@ public class Animal implements Actor {
 
     public void die() {
         Location death_location = world.getLocation(this);
-        world.delete(this);
+        if (world.isOnTile(this)) {
+            world.delete(this);
+        }
         Carcass animal_carcass = new Carcass(carcass_has_fungi);
         if (!world.containsNonBlocking(death_location)) {
             world.setTile(death_location, animal_carcass);
