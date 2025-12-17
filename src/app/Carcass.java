@@ -3,10 +3,9 @@ package app;
 import app.animal.*;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
-import itumulator.world.NonBlocking;
 import itumulator.world.World;
 
-public class Carcass implements Actor, NonBlocking, Edible, Mortal {
+public class Carcass implements Actor, Edible, Mortal {
     private int meat_amount;
     private Fungi fungi;
 

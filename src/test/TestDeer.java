@@ -13,15 +13,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestDeer extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Deer(world, false));
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-4/t4-1a.txt", Deer.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testAnimalDeath(new Deer(world, false));
+        animalDies(new Deer(world, false));
     }
 
     @Test

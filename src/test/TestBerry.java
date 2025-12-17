@@ -12,9 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBerry extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Berry());
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-2/t2-6a.txt", Berry.class);
     }
 
     @Test

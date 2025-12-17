@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.*;
 
-public class Rabbit extends Animal implements Edible {
+public class Rabbit extends Animal {
     private int age;
     private Burrow burrow;
     private int simulation_counts;
@@ -141,7 +141,7 @@ public class Rabbit extends Animal implements Edible {
     }
 
     public void eat(Grass grass_tile) {
-        world.delete(grass_tile); // TODO Upate to use the getEaten on the grass tile
+        grass_tile.getEaten(world);
         energy = energy + 20;
     }
 

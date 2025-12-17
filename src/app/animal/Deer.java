@@ -6,7 +6,7 @@ import itumulator.world.World;
 
 import java.util.*;
 
-public class Deer extends Animal implements Edible {
+public class Deer extends Animal {
     private int age;
     private int simulation_counts;
 

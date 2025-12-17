@@ -1,11 +1,12 @@
 package app.animal;
 
 import app.Carcass;
+import app.Mortal;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
 
-public class Animal implements Actor {
+public class Animal implements Actor, Mortal {
     World world;
     protected double energy;
     private boolean carcass_has_fungi;

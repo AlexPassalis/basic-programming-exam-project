@@ -11,9 +11,8 @@ import java.io.FileNotFoundException;
 
 public class TestCarcass extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Carcass(false));
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-3/t3-2ab.txt", Carcass.class);
     }
 
     @Test
@@ -25,10 +24,10 @@ public class TestCarcass extends TestSuper {
           world.setTile(rabbitLocation, rabbit);
 
           rabbit.die();
-          Object nonBlocking = world.getNonBlocking(rabbitLocation);
-          assertTrue(nonBlocking instanceof Carcass);
+          Object tile = world.getTile(rabbitLocation);
+          assertTrue(tile instanceof Carcass);
 
-          Carcass carcass = (Carcass) nonBlocking;
+          Carcass carcass = (Carcass) tile;
           int initialMeat = carcass.getMeatAmount();
 
           Wolf wolf = new Wolf(world, false, new Den());
@@ -47,12 +46,11 @@ public class TestCarcass extends TestSuper {
 
           final int MAX_STEPS = 50;
           for (int i = 0; i < MAX_STEPS; i++) {
-              if (!world.containsNonBlocking(location)) {
+              if (!world.contains(carcass)) {
                   break;
               }
               carcass.act(world);
           }
-          Object nonBlocking = world.getNonBlocking(location);
-          assertTrue(nonBlocking == null || !(nonBlocking instanceof Carcass));
+          assertFalse(world.contains(carcass));
       }
 }

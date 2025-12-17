@@ -27,7 +27,6 @@ import java.util.*;
 public class Main {
     private static Program program;
     private static World world;
-    private static boolean isTesting;
 
     public static void main(String[] args) throws FileNotFoundException {
         if (args.length == 0) {
@@ -36,7 +35,7 @@ public class Main {
         } // If the user does not provide the file path that Main will generate the world out of, notify him.
         String filepath = args[0];
 
-        isTesting = false;
+        boolean isTesting = false;
         if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
         } // Use this boolean for test specific configuration.
@@ -44,8 +43,10 @@ public class Main {
         ParseInputFileReturnType input_file_info = parseInputFile(filepath);
         configureWorld(input_file_info);
 
-        int simulation_counts = 200;
-        runProgram(simulation_counts, filepath);
+        if (!isTesting) {
+            int simulation_counts = 200;
+            runProgram(simulation_counts, filepath);
+        }
     }
 
     private static class ParseInputFileReturnType {
@@ -75,7 +76,7 @@ public class Main {
             }
             String[] parts = line.split("\\s+");
             String type = parts[0].trim().toLowerCase(); // Remove unnecessary spaces and convert to lowercase
-            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear") && !type.equals("berry") && !type.equals("carcass")) {
+            if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear") && !type.equals("berry") && !type.equals("carcass") && !type.equals("deer")) {
                 throw new IllegalArgumentException("Invalid type: " + type);
             }
 
@@ -130,7 +131,7 @@ public class Main {
     private static void configureWorld(ParseInputFileReturnType input_file_info) {
         int size = input_file_info.size;
         int display_size = 800;
-        int delay = isTesting ? 10 : 750;
+        int delay = 750;
 
         program = new Program(size, display_size, delay);
         world = program.getWorld();
@@ -198,7 +199,7 @@ public class Main {
             if (spawn_location != null) {
                 location = spawn_location;
             } else {
-                location = type.equals("grass") || type.equals("burrow") || type.equals("berry") || type.equals("carcass") ? getEmptyNonBlockingLocation() : getEmptyLocation();
+                location = type.equals("grass") || type.equals("burrow") || type.equals("berry") ? getEmptyNonBlockingLocation() : getEmptyLocation();
             }
 
             Object entity;
@@ -223,7 +224,6 @@ public class Main {
                         entity = alpha_wolf;
                     } else {
                         Wolf nonAlfaWolf = new Wolf(world, carcass_has_fungi, wolf_den, alpha_wolf);
-                        alpha_wolf.addFollower(nonAlfaWolf);
                         entity = nonAlfaWolf;
                     }
                     break;
@@ -282,9 +282,7 @@ public class Main {
     }
 
     private static void runProgram(int simulation_counts, String filepath) {
-        if (!isTesting) {
-            program.show();
-        }
+        program.show();
 
         ArrayList<String> problematic_filepaths = new ArrayList<>(List.of("src/data/week-2/t2-3a.txt", "src/data/week-2/t2-4b.txt", "src/data/week-2/t2-5a.txt"));
 

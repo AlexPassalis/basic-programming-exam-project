@@ -6,8 +6,7 @@ import java.io.FileNotFoundException;
 
 public class TestBurrow extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Burrow());
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-1/t1-3a.txt", Burrow.class);
     }
 }

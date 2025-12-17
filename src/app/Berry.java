@@ -1,7 +1,6 @@
 package app;
 
 import java.awt.Color;
-import itumulator.executable.Program;
 import itumulator.executable.DisplayInformation;
 import itumulator.simulator.Actor;
 import itumulator.world.NonBlocking;

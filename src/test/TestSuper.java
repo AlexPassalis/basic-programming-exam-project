@@ -10,18 +10,11 @@ import org.junit.jupiter.api.AfterEach;
 import java.io.FileNotFoundException;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSuper {
     public Program program;
     public World world;
-    public boolean rabbit_can_die;
-
-    // Overloaded setUp method - defaults to empty-world.txt if no filepath provided
-    public void setUp() throws FileNotFoundException {
-        setUp("src/data/empty-world.txt");
-    }
 
     public void setUp(String filepath) throws FileNotFoundException {
         Main.main(new String[]{filepath, "true"});
@@ -29,49 +22,39 @@ public class TestSuper {
         world = Main.getWorld();
     }
 
+    // Overloaded setUp method - defaults to empty-world.txt if no filepath provided
+    public void setUp() throws FileNotFoundException {
+        setUp("src/data/empty-world.txt");
+    }
+
     @AfterEach
     void tearDown() {
         world = null; //Resets the world, to prevent data or state from test affecting next test
     }
 
-    // Helper method to test if an entity can be initialized
-    protected void testInitialization(Object entity) {
-        // Create the entity at a specific location
-        Location location = new Location(0, 0);
-        world.setTile(location, entity);
-
-        // Retrieves all entities currently in the world map
+    // Helper method to check whether the instance gets initialized in the world
+    public void getsInitialized(String filepath, Class<?> entityClass) throws FileNotFoundException {
+        setUp(filepath);
         Map<Object, Location> entities = world.getEntities();
 
-        int count = 0;
-        // Iterate through all entities to count how many are instances of the specified class
+        boolean has_atleast_one_entity = false;
         for (Object _entity : entities.keySet()) {
-            if (entity.getClass().isInstance(_entity)) {
-                count = count + 1;
+            if (entityClass.isInstance(_entity)) {
+               has_atleast_one_entity = true;
             }
         }
 
-        // Assert that exactly one entity of the specified type exists in the world
-        assertEquals(1, count);
+        assertTrue(has_atleast_one_entity);
     }
 
     // Helper method to test if an animal dies when energy reaches 0
-    protected void testAnimalDeath(Animal animal) {
+    public void animalDies(Animal animal) {
         Location location = new Location(0, 0);
         world.setTile(location, animal);
 
-        animal.setEnergy(0); // Set the animal's energy to 0 to trigger death
-        animal.act(world); // Trigger the animal's act method to check if it dies due to no energy
-        assertFalse(world.contains(animal));
+        animal.setEnergy(0); // Set the animal's energy to 0
+        animal.act(world); // act to call the die method
 
-        // Check if any animals of this type exist in the world
-        boolean world_has_animal = false;
-        for (Object entity : world.getEntities().keySet()) {
-            if (animal.getClass().isInstance(entity)) {
-                world_has_animal = true;
-                break;
-            }
-        }
-        assertFalse(world_has_animal); // Assert that no animals of this type remain (the animal died)
+        assertFalse(world.contains(animal));
     }
 }

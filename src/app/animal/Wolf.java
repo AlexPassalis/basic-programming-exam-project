@@ -2,7 +2,6 @@ package app.animal;
 
 import app.Carcass;
 import app.Den;
-import app.Edible;
 import itumulator.world.World;
 import itumulator.world.Location;
 import java.util.ArrayList;
@@ -10,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Random;
 
-public class Wolf extends Predator implements Edible {
+public class Wolf extends Predator {
     private Den den;
     private boolean isAlpha;
     private Wolf alpha;
@@ -27,6 +26,7 @@ public class Wolf extends Predator implements Edible {
         this.followers = null;
         this.is_reproduction_time = false;
         this.simulation_counts_reproducing = 0;
+        alpha.addFollower(this);
     }
 
     public Wolf(World world, boolean carcass_has_fungi, Den den) {

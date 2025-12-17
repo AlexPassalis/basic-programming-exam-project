@@ -9,10 +9,12 @@ import java.util.*;
 
 public class Bear extends Predator {
     private Location spawn_location;
+    private int territory_radius;
 
     public Bear(World world, boolean carcass_has_fungi, Location spawn_location) {
         super(world, carcass_has_fungi);
         this.spawn_location = spawn_location;
+        this.territory_radius = 3;
     }
 
     @Override
@@ -26,7 +28,6 @@ public class Bear extends Predator {
 
     @Override
     protected void movementLogic() {
-        int territory_radius = 3;
         Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, territory_radius);
         if (territory_tiles.size() < 1) {
             return;
@@ -100,7 +101,7 @@ public class Bear extends Predator {
         }
 
         // Move one tile towards target or move randomly
-        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
+        Set<Location> adjacent_tiles = getTilesInsideTerritory();
         if (adjacent_tiles.isEmpty()) {
             return;
         }
@@ -150,6 +151,21 @@ public class Bear extends Predator {
                 world.move(this, next_tile);
             }
         }
+    }
+
+    private Set<Location> getTilesInsideTerritory() {
+        Location current_location = world.getLocation(this);
+        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
+        Set<Location> valid_tiles = new HashSet<>();
+
+        for (Location tile : adjacent_tiles) {
+            int distance = calculateManhattanDistance(tile, spawn_location);
+            if (distance <= territory_radius) {
+                valid_tiles.add(tile);
+            }
+        }
+
+        return valid_tiles;
     }
 
     @Override

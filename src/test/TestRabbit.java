@@ -11,15 +11,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRabbit extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Rabbit(world, false));
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-1/t1-1c.txt", Rabbit.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testAnimalDeath(new Rabbit(world, false));
+        animalDies(new Rabbit(world, false));
     }
 
     @Test

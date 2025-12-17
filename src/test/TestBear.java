@@ -12,15 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestBear extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Bear(world, false, new Location(0, 0)));
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-2/t2-4b.txt", Bear.class);
     }
 
     @Test
     public void can_die() throws FileNotFoundException {
         setUp();
-        testAnimalDeath(new Rabbit(world, false));
+        animalDies(new Bear(world, false, new Location(0, 0)));
     }
 
     @Test
@@ -30,16 +29,14 @@ public class TestBear extends TestSuper {
         Bear bear = new Bear(world, false, spawn_location);
         world.setTile(spawn_location, bear);
 
-        for (int i = 0; i < 5; i = i + 1) {
-            for (int j = 0; j < 5; j = j + 1) {
-                bear.act(world);
-                bear.restoreEnergyForTesting(); // Calls method from bear, that restores 100 energy
-            }
+        for (int i = 0; i < 25; i++) {
+            bear.act(world);
+            bear.restoreEnergyForTesting();
 
             Location current = world.getLocation(bear);
-            int distance = Math.abs(current.getX() - spawn_location.getX()) + Math.abs(current.getY() - spawn_location.getY());
-            int territoryRadius = 3;
-            assert distance <= territoryRadius;
+            int distance = Math.abs(current.getX() - spawn_location.getX())
+                    + Math.abs(current.getY() - spawn_location.getY());
+            assert distance <= 3;
         }
     }
 

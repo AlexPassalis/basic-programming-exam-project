@@ -11,9 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestGrass extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
-        setUp();
-        testInitialization(new Grass());
+    public void gets_initialized() throws FileNotFoundException {
+        getsInitialized("src/data/week-1/t1-1a.txt", Grass.class);
     }
 
     @Test
@@ -21,6 +20,11 @@ public class TestGrass extends TestSuper {
         setUp("src/data/week-1/t1-1b.txt");
 
         int grass_entities_in_file = 1; // The input file contains 1 grass
+
+        // Run simulation to allow grass to spread
+        for (int i = 0; i < 5; i++) {
+            program.simulate();
+        }
 
         Map<Object, Location> entities_in_world = world.getEntities(); // Get all the entities in the world.
         int grass_entities_in_the_world = 0;

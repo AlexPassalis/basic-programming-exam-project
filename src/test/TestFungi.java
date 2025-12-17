@@ -1,5 +1,6 @@
 package test;
 import app.*;
+import itumulator.world.Location;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import app.Carcass;
@@ -9,9 +10,19 @@ import java.io.FileNotFoundException;
 
 public class TestFungi extends TestSuper {
     @Test
-    public void gets_initialised() throws FileNotFoundException {
+    public void gets_initialized() throws FileNotFoundException {
         setUp();
-        testInitialization(new Fungi(20));
+
+        Location location = new Location(0, 0);
+        Carcass carcass = new Carcass(true);
+        world.setTile(location, carcass);
+
+        for (int i = 0; i < 11; i++) {
+            carcass.act(world);
+        }
+
+        Object tile = world.getNonBlocking(location);
+        assertTrue(tile instanceof Fungi);
     }
 
     @Test
@@ -26,7 +37,7 @@ public class TestFungi extends TestSuper {
         }
         assertTrue(number_of_carcasses >= 5 && number_of_carcasses <= 8);
 
-        for (int i = 0; i < 10; i = i + 1) {
+        for (int i = 0; i < 11; i = i + 1) {
             program.simulate();
         }
 
@@ -39,5 +50,3 @@ public class TestFungi extends TestSuper {
         assertEquals(number_of_carcasses, number_of_fungi);
     }
 }
-
-
