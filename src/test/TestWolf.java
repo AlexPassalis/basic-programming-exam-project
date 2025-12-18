@@ -37,6 +37,7 @@ public class TestWolf extends TestSuper {
         world.setTile(follower_spawn_location, follower);
 
         for (int i = 0; i < 10; i = i + 1) {
+            alpha.is_reproduction_time = false;
             program.simulate();
         }
 
@@ -61,13 +62,14 @@ public class TestWolf extends TestSuper {
         world.setTile(alpha_spawn_location, alpha);
 
         Rabbit rabbit = new Rabbit(world, false);
-        Location rabbit_spawn_location = new Location (2, 2);
+        Location rabbit_spawn_location = new Location (1, 1);
         world.setTile(rabbit_spawn_location, rabbit);
 
         int old_distance = Math.abs(alpha_spawn_location.getX() - rabbit_spawn_location.getX()) +
                 Math.abs(alpha_spawn_location.getY() - rabbit_spawn_location.getY());
 
-        for (int i = 0; i < 1; i = i + 1) {
+        for (int i = 0; i < 2; i = i + 1) {
+            alpha.is_reproduction_time = false;
             alpha.act(world);
         }
         Location alpha_new_location = world.getLocation(alpha);
@@ -77,6 +79,7 @@ public class TestWolf extends TestSuper {
         assertTrue(new_distance < old_distance);
 
         for (int i = 0; i < 10; i  = i + 1) {
+            alpha.is_reproduction_time = false;
             alpha.act(world);
         }
         assertFalse(world.contains(rabbit));

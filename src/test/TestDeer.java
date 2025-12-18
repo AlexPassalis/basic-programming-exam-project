@@ -53,6 +53,10 @@ public class TestDeer extends TestSuper {
         Berry berry = new Berry();
         world.setTile(berry_location, berry);
 
+        for (int i = 0; i < 10; i++) {
+            berry.act(world);
+        }
+
         double initial_energy = deer.getEnergy();
 
         deer.act(world);
@@ -152,9 +156,9 @@ public class TestDeer extends TestSuper {
         world.setTile(location1, deer1);
         world.setTile(location2, deer2);
 
-        deer1.setAge(4);
+        deer1.setAge(6);
         deer1.setEnergy(70);
-        deer2.setAge(4);
+        deer2.setAge(6);
         deer2.setEnergy(70);
 
         int initial_deer_count = countDeer();

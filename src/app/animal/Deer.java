@@ -51,6 +51,33 @@ public class Deer extends Animal {
         }
 
         Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location);
+
+        for (Location tile : surrounding_tiles) {
+            Object food = world.getNonBlocking(tile);
+            if (food instanceof Grass) {
+                eatGrass((Grass) food);
+                return;
+            } else if (food instanceof Berry) {
+                Berry berry = (Berry) food;
+                if (berry.hasBerries()) {
+                    eatBerries(berry);
+                    return;
+                }
+            } else if (food instanceof Fungi) {
+                eatFungi((Fungi) food);
+                return;
+            }
+        }
+
+        if (isStarving()) {
+            for (Location tile : surrounding_tiles) {
+                Object object = world.getTile(tile);
+                if (object instanceof Carcass) {
+                    eatCarcass((Carcass) object, this);
+                    return;
+                }
+            }
+        }
         if (surrounding_tiles.isEmpty()) {
             return;
         }
@@ -76,8 +103,6 @@ public class Deer extends Animal {
 
             if (!empty_tiles.isEmpty()) {
                 best_tile = empty_tiles.get(new Random().nextInt(empty_tiles.size()));
-            } else if (!options.isEmpty()) {
-                best_tile = options.get(new Random().nextInt(options.size()));
             }
         }
 
@@ -141,14 +166,11 @@ public class Deer extends Animal {
         Object food = world.getNonBlocking(tile);
 
         if (food instanceof Grass) {
-            ((Grass) food).getEaten(world);
-            energy += 20;
+            eatGrass((Grass) food);
         } else if (food instanceof Berry) {
-            ((Berry) food).getEaten(world);
-            energy += 25;
+            eatBerries((Berry) food);
         } else if (food instanceof Fungi) {
-            ((Fungi) food).getEaten(world);
-            energy += 30;
+            eatFungi((Fungi) food);
         }
     }
 
@@ -185,8 +207,13 @@ public class Deer extends Animal {
     private Location chooseFoodTile(List<Location> options) {
         for (Location option : options) {
             Object food = world.getNonBlocking(option);
-            if (food instanceof Fungi || food instanceof Berry || food instanceof Grass) {
+            if (food instanceof Fungi || food instanceof Grass) {
                 return option;
+            } else if (food instanceof Berry) {
+                Berry berry = (Berry) food;
+                if (berry.hasBerries()) {
+                    return option;
+                }
             }
 
             if (isStarving()) {
@@ -200,7 +227,7 @@ public class Deer extends Animal {
     }
 
     public void reproduce() {
-        int min_age = 4;
+        int min_age = 6;
         if (age < min_age) {
             return;
         }

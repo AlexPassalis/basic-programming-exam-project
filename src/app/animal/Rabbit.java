@@ -141,8 +141,7 @@ public class Rabbit extends Animal {
     }
 
     public void eat(Grass grass_tile) {
-        grass_tile.getEaten(world);
-        energy = energy + 20;
+        eatGrass(grass_tile);
     }
 
     public void reproduce() {

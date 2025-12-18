@@ -28,12 +28,38 @@ public class Bear extends Predator {
 
     @Override
     protected void movementLogic() {
+        Location current_location = world.getLocation(this);
+        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
+
+        for (Location tile : adjacent_tiles) {
+            Object object = world.getTile(tile);
+
+            if (object instanceof Wolf) {
+                kill((Wolf) object);
+                return;
+            } else if (object instanceof Deer) {
+                kill((Deer) object);
+                return;
+            } else if (object instanceof Rabbit) {
+                kill((Rabbit) object);
+                return;
+            } else if (object instanceof Carcass) {
+                eatCarcass((Carcass) object, this);
+                return;
+            } else if (object instanceof Berry) {
+                Berry berry = (Berry) object;
+                if (berry.hasBerries()) {
+                    int berry_count = berry.getBerries();
+                    eatBerries(berry, berry_count);
+                    return;
+                }
+            }
+        }
+
         Set<Location> territory_tiles = world.getSurroundingTiles(spawn_location, territory_radius);
         if (territory_tiles.size() < 1) {
             return;
         }
-
-        Location current_location = world.getLocation(this);
 
         Location closest_wolf_location = null;
         int min_wolf_distance = Integer.MAX_VALUE;
@@ -89,7 +115,7 @@ public class Bear extends Predator {
                 }
             }
 
-            if (tile instanceof Berry && ((Berry) tile).getBerries() > 0) {
+            if (tile instanceof Berry && ((Berry) tile).hasBerries()) {
                 int distance = calculateManhattanDistance(location, current_location);
 
                 if (distance < min_berry_distance) {
@@ -115,8 +141,8 @@ public class Bear extends Predator {
         }
 
         // Move one tile towards target or move randomly
-        Set<Location> adjacent_tiles = getTilesInsideTerritory();
-        if (adjacent_tiles.isEmpty()) {
+        Set<Location> valid_move_tiles = getTilesInsideTerritory();
+        if (valid_move_tiles.isEmpty()) {
             return;
         }
 
@@ -126,7 +152,7 @@ public class Bear extends Predator {
             // Find adjacent tile closest to target
             int best_distance = Integer.MAX_VALUE;
 
-            for (Location tile : adjacent_tiles) {
+            for (Location tile : valid_move_tiles) {
                 int distance = calculateManhattanDistance(tile, target_destination);
 
                 if (distance < best_distance) {
@@ -136,34 +162,20 @@ public class Bear extends Predator {
             }
         } else {
             // No target, move randomly
-            List<Location> list = new ArrayList<>(adjacent_tiles);
-            int index = new Random().nextInt(list.size());
-            next_tile = list.get(index);
-        }
-
-        if (next_tile != null) {
-            Object tile_at_new_location = world.getTile(next_tile);
-
-            if (tile_at_new_location instanceof Deer || tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
-                Animal animal = (Animal) tile_at_new_location;
-                kill(animal);
-                return;
-            } else if (tile_at_new_location instanceof Carcass) {
-                Carcass carcass = (Carcass) tile_at_new_location;
-                eatCarcass(carcass, this);
-                return;
-            } else if (tile_at_new_location instanceof Berry) {
-                Berry berry = (Berry) tile_at_new_location;
-                int berry_count = berry.getBerries();
-                if (berry_count > 0) {
-                    eatBerries(berry, berry_count);
-                    return;
+            List<Location> empty_tiles = new ArrayList<>();
+            for (Location tile : valid_move_tiles) {
+                if (world.isTileEmpty(tile)) {
+                    empty_tiles.add(tile);
                 }
             }
-
-            if (world.isTileEmpty(next_tile)) {
-                world.move(this, next_tile);
+            if (!empty_tiles.isEmpty()) {
+                int index = new Random().nextInt(empty_tiles.size());
+                next_tile = empty_tiles.get(index);
             }
+        }
+
+        if (next_tile != null && world.isTileEmpty(next_tile)) {
+            world.move(this, next_tile);
         }
     }
 

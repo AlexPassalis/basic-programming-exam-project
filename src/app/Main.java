@@ -198,6 +198,15 @@ public class Main {
             Location location;
             if (spawn_location != null) {
                 location = spawn_location;
+                while (!world.isTileEmpty(location)) {
+                    Set<Location> surrounding = world.getSurroundingTiles(spawn_location);
+                    if (!surrounding.isEmpty()) {
+                        location = surrounding.iterator().next();
+                    } else {
+                        location = getEmptyLocation();
+                        break;
+                    }
+                }
             } else {
                 location = type.equals("grass") || type.equals("burrow") || type.equals("berry") ? getEmptyNonBlockingLocation() : getEmptyLocation();
             }

@@ -1,7 +1,6 @@
 package app.animal;
 
-import app.Carcass;
-import app.Mortal;
+import app.*;
 import itumulator.simulator.Actor;
 import itumulator.world.Location;
 import itumulator.world.World;
@@ -54,6 +53,19 @@ public class Animal implements Actor, Mortal {
         }
     }
 
+    public void eatGrass(Grass grass) {
+        grass.getEaten(world);
+        energy = energy + 15;
+    }
+
+    public void eatBerries(Berry berry) {
+        if (!berry.hasBerries()) {
+            return;
+        }
+        berry.getEaten(world);
+        energy = energy + 20;
+    }
+
     public void eatCarcass(Carcass carcass, Animal animal) {
         double meat_available = carcass.getMeatAmount();
         if (meat_available <= 0) {
@@ -74,6 +86,11 @@ public class Animal implements Actor, Mortal {
             double energy_per_meat_consumed = 2;
             energy = energy + (meat_consumed * energy_per_meat_consumed);
         }
+    }
+
+    public void eatFungi(Fungi fungi) {
+        fungi.getEaten(world);
+        energy = energy + 30;
     }
 
     public double getEnergy() {
