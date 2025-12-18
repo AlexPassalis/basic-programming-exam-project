@@ -86,44 +86,39 @@ public class TestWolf extends TestSuper {
     }
 
     @Test
-    public void alpha_enters_den_and_creates_pup () throws FileNotFoundException, IllegalAccessException, NoSuchFieldException {
+    public void alpha_enters_den_and_creates_pup() throws FileNotFoundException {
         setUp();
         Den den = new Den();
         Location den_location = new Location(5, 5);
         world.setTile(den_location, den);
 
-        Wolf alpha = new Wolf(world, false, den);
-        Wolf follower = new Wolf (world, false, den, alpha);
-        alpha.addFollower(follower);
-        Location alpha_spawn_location = new Location (2, 2);
-        Location follower_spawn_location = new Location (2, 3);
+        Wolf alpha_wolf = new Wolf(world, false, den);
+        Wolf follower_wolf = new Wolf(world, false, den, alpha_wolf);
 
-        world.setTile(alpha_spawn_location, alpha);
-        world.setTile(follower_spawn_location, follower);
-        int initialFollowers = alpha.getFollowers().size();
+        world.setTile(new Location(4, 4), alpha_wolf);
+        world.setTile(new Location(4, 5), follower_wolf);
 
-        java.lang.reflect.Field worldField = Animal.class.getDeclaredField("world");
-        worldField.setAccessible(true);
-        worldField.set(alpha, world);
-        worldField.set(follower, world);
+        int initial_pack_size = alpha_wolf.getFollowers().size();
 
-        alpha.enterDenForReproduction(world.getLocation(alpha));
-        follower.enterDenForReproduction(world.getLocation(follower));
+        alpha_wolf.is_reproduction_time = true;
+        follower_wolf.is_reproduction_time = true;
 
-        java.lang.reflect.Field counterField = Wolf.class.getDeclaredField("simulation_counts_reproducing");
-        counterField.setAccessible(true);
-        counterField.setInt(alpha, 1);
-        counterField.setInt(follower, 1);
+        for (int i = 0; i < 30; i++) {
+            alpha_wolf.act(world);
+            follower_wolf.act(world);
+        }
 
-        alpha.act(world);
-        follower.act(world);
+        assertTrue(world.contains(alpha_wolf));
 
-        assertTrue(world.contains(alpha));
-        int afterFollowers = alpha.getFollowers().size();
-        assertTrue(afterFollowers > initialFollowers);
+        int after_pack_size = alpha_wolf.getFollowers().size();
+        assertTrue(after_pack_size > initial_pack_size);
 
-        int wolfCount = 0;
-        for (Object e: world.getEntities().keySet()) if (e instanceof Wolf) wolfCount++;
-        assertTrue(wolfCount >= initialFollowers + 2);
+        int wolf_count = 0;
+        for (Object entity : world.getEntities().keySet()) {
+            if (entity instanceof Wolf) {
+                wolf_count = wolf_count + 1;
+            }
+        }
+        assertTrue(wolf_count >= 3);
     }
 }
