@@ -133,7 +133,7 @@ public class Deer extends Animal {
 
     @Override
     protected void loseEnergyForMoving() {
-        int energy_reduction = 3;
+        double energy_reduction = 1;
         energy = energy - energy_reduction;
     }
 

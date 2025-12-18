@@ -9,14 +9,14 @@ public class Carcass implements Actor, Edible, Mortal {
     private int meat_amount;
     private Fungi fungi;
 
-    public Carcass(boolean carcass_has_fungi) {
+    public Carcass(boolean has_fungi) {
         this.meat_amount = 20;
-        if (carcass_has_fungi) {
+        if (has_fungi) {
             fungi = new Fungi(meat_amount);
         }
     }
 
-    public Carcass(boolean carcass_has_fungi, Animal animal) {
+    public Carcass(boolean has_fungi, Animal animal) {
         int meat_amount;
 
         if (animal instanceof Rabbit) {
@@ -33,7 +33,7 @@ public class Carcass implements Actor, Edible, Mortal {
 
         this.meat_amount = meat_amount;
 
-        if (carcass_has_fungi) {
+        if (has_fungi) {
             fungi = new Fungi(meat_amount);
         }
     }

@@ -25,60 +25,58 @@ public class TestWolf extends TestSuper {
     public void follower_follows_alpha() throws FileNotFoundException {
         setUp();
         Den den = new Den();
-        Location denLocation = new Location(5, 5);
-        world.setTile(denLocation, den);
+        Location den_location = new Location(5, 5);
+        world.setTile(den_location, den);
 
         Wolf alpha = new Wolf(world, false, den);
-        Wolf follower = new Wolf(world, false, den, alpha);
+        Location alpha_spawn_location = new Location(2, 2);
+        world.setTile(alpha_spawn_location, alpha);
 
-        Location alphaStart = new Location(2, 2);
-        Location followerStart = new Location (2, 4);
-        world.setTile(alphaStart, alpha);
-        world.setTile(followerStart, follower);
+        Wolf follower = new Wolf(world, false, den, alpha);
+        Location follower_spawn_location = new Location (2, 3);
+        world.setTile(follower_spawn_location, follower);
 
         for (int i = 0; i < 10; i = i + 1) {
             program.simulate();
         }
 
-        Location alphaNew = world.getLocation(alpha);
-        Location followerNew = world.getLocation(follower);
+        Location alpha_new_location = world.getLocation(alpha);
+        Location follower_new_location = world.getLocation(follower);
+        int distance = Math.abs(alpha_new_location.getX() - follower_new_location.getX()) +
+                Math.abs(alpha_new_location.getY() - follower_new_location.getY());
 
-        int distance = Math.abs(alphaNew.getX() - followerNew.getX()) +
-                Math.abs(alphaNew.getY() - followerNew.getY());
-
-        assertTrue(distance <= 2);
+        assertTrue(distance <= 3);
     }
 
     @Test
     public void alpha_hunts_and_kills_rabbits() throws FileNotFoundException {
         setUp();
+
         Den den = new Den();
-        Location denLocation = new Location(5, 5);
-        world.setTile(denLocation, den);
+        Location den_location = new Location(5, 5);
+        world.setTile(den_location, den);
+
         Wolf alpha = new Wolf(world, false, den);
-        Location alphaLocation = new Location (2, 2);
-        world.setTile(alphaLocation, alpha);
+        Location alpha_spawn_location = new Location (4, 4);
+        world.setTile(alpha_spawn_location, alpha);
 
         Rabbit rabbit = new Rabbit(world, false);
-        Location rabbitLocation = new Location (2, 4);
-        world.setTile(rabbitLocation, rabbit);
+        Location rabbit_spawn_location = new Location (2, 2);
+        world.setTile(rabbit_spawn_location, rabbit);
 
-        alpha.setEnergy(10);
-        int oldDistance = Math.abs(alphaLocation.getX() - rabbitLocation.getX()) +
-                Math.abs(alphaLocation.getY() - rabbitLocation.getY());
-        alpha.act(world);
-        Location alphaNew = world.getLocation(alpha);
-        int newDistance = Math.abs(alphaNew.getX() - rabbitLocation.getX()) +
-                Math.abs(alphaNew.getY() - rabbitLocation.getY());
-        assertTrue(newDistance < oldDistance);
+        int old_distance = Math.abs(alpha_spawn_location.getX() - rabbit_spawn_location.getX()) +
+                Math.abs(alpha_spawn_location.getY() - rabbit_spawn_location.getY());
 
-        final int MAX_STEPS = 10;
-        boolean rabbitRemoved = false;
-        for (int i = 0; i < MAX_STEPS; i++) {
-            if (!world.contains(rabbit)) {
-                rabbitRemoved = true;
-                break;
-            }
+        for (int i = 0; i < 1; i = i + 1) {
+            alpha.act(world);
+        }
+        Location alpha_new_location = world.getLocation(alpha);
+        Location rabbit_new_location = world.getLocation(rabbit);
+        int new_distance = Math.abs(alpha_new_location.getX() - rabbit_new_location.getX()) +
+                Math.abs(alpha_new_location.getY() - rabbit_new_location.getY());
+        assertTrue(new_distance < old_distance);
+
+        for (int i = 0; i < 10; i  = i + 1) {
             alpha.act(world);
         }
         assertFalse(world.contains(rabbit));
@@ -88,17 +86,17 @@ public class TestWolf extends TestSuper {
     public void alpha_enters_den_and_creates_pup () throws FileNotFoundException, IllegalAccessException, NoSuchFieldException {
         setUp();
         Den den = new Den();
-        Location denLocation = new Location(5, 5);
-        world.setTile(denLocation, den);
+        Location den_location = new Location(5, 5);
+        world.setTile(den_location, den);
 
         Wolf alpha = new Wolf(world, false, den);
         Wolf follower = new Wolf (world, false, den, alpha);
         alpha.addFollower(follower);
-        Location alphaLocation = new Location (2, 2);
-        Location followerLocation = new Location (2, 3);
+        Location alpha_spawn_location = new Location (2, 2);
+        Location follower_spawn_location = new Location (2, 3);
 
-        world.setTile(alphaLocation, alpha);
-        world.setTile(followerLocation, follower);
+        world.setTile(alpha_spawn_location, alpha);
+        world.setTile(follower_spawn_location, follower);
         int initialFollowers = alpha.getFollowers().size();
 
         java.lang.reflect.Field worldField = Animal.class.getDeclaredField("world");

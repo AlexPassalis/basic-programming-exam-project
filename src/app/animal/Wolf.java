@@ -4,10 +4,8 @@ import app.Carcass;
 import app.Den;
 import itumulator.world.World;
 import itumulator.world.Location;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.Random;
+
+import java.util.*;
 
 public class Wolf extends Predator {
     private Den den;
@@ -48,9 +46,9 @@ public class Wolf extends Predator {
         }
     }
 
-    public void setAlpha(Wolf alphaWolf) {
+    public void setAlpha(Wolf alpha_wolf) {
         if (!isAlpha) {
-            this.alpha = alphaWolf;
+            this.alpha = alpha_wolf;
         }
     }
 
@@ -64,9 +62,16 @@ public class Wolf extends Predator {
             return;
         }
 
+        if (energy <= 0 || (!isAlpha && alpha == null)) {
+            if (world.isOnTile(this)) {
+                die();
+            }
+            return;
+        }
+
         if (simulation_counts_reproducing > 0) {
             simulation_counts_reproducing = simulation_counts_reproducing - 1;
-            if (simulation_counts_reproducing == 0 && isAlpha) {
+            if (simulation_counts_reproducing == 0) {
                 exitDenAfterReproduction();
             }
         }
@@ -77,20 +82,10 @@ public class Wolf extends Predator {
 
         if (!is_reproduction_time) {
             double reproduction_chance = 0.03;
-            double dice = new Random().nextDouble(1);
+            double dice = new Random().nextDouble();
             if (dice < reproduction_chance) {
                 is_reproduction_time = true;
             }
-        }
-
-        if (energy <= 0) {
-            if (isAlpha) {
-                for (Wolf wolf : followers) {
-                    wolf.die();
-                }
-            }
-            die();
-            return;
         }
 
         super.act(world);
@@ -99,255 +94,121 @@ public class Wolf extends Predator {
     @Override
     protected void movementLogic() {
         Location current_location = world.getLocation(this);
+        Set<Location> adjacent_tiles = world.getSurroundingTiles(current_location);
 
         if (isAlpha) {
-            if (!followers.isEmpty() && is_reproduction_time) {
-                Location den_location = world.getLocation(den);
+            for (Location tile : adjacent_tiles) {
+                Object object = world.getTile(tile);
 
-                // Check if wolf reached the den
-                if (current_location.equals(den_location)) {
-                    enterDenForReproduction(current_location);
+                if (object instanceof Deer) {
+                    kill((Deer) object);
                     return;
-                }
-
-                // Find the shortest path to den by moving to the adjacent tile closest to den
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
-                int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile : empty_tiles) {
-                    int distance = calculateManhattanDistance(tile, den_location);
-
-                    if (distance < best_distance) {
-                        best_distance = distance;
-                        best_tile = tile;
+                } else if (object instanceof Rabbit) {
+                    kill((Rabbit) object);
+                    return;
+                } else if (object instanceof Carcass carcass) {
+                    eatCarcass(carcass, this);
+                    return;
+                } else if (object instanceof Wolf otherWolf) {
+                    if (isAlpha && otherWolf.isAlpha()) {
+                        fightAlpha(otherWolf);
+                        return;
                     }
                 }
-
-                if (best_tile != null) {
-                    world.move(this, best_tile);
-                }
-
-                return;
             }
 
-            Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location, 5);
+            int territory_radius = 5;
+            Set<Location> territory_tiles = world.getSurroundingTiles(current_location, territory_radius);
+            if (!territory_tiles.isEmpty()) {
+                Location closest_deer = null;
+                int min_deer_distance = Integer.MAX_VALUE;
+                Location closest_rabbit = null;
+                int min_rabbit_distance = Integer.MAX_VALUE;
+                Location closest_carcass = null;
+                int min_carcass_distance = Integer.MAX_VALUE;
 
-            Location closest_alpha_location = null;
-            int min_distance_alpha = Integer.MAX_VALUE;
+                for (Location location : territory_tiles) {
+                    Object tile = world.getTile(location);
 
-            Location closest_rabbit_location = null;
-            int min_distance_rabbit = Integer.MAX_VALUE;
-
-            Location closest_carcass_location = null;
-            int min_distance_carcass = Integer.MAX_VALUE;
-
-            for (Location location : surrounding_tiles) {
-                Object tile = world.getTile(location);
-
-                if (tile instanceof Wolf) {
-                    Wolf other_wolf = (Wolf) tile;
-                    if (other_wolf.isAlpha() && other_wolf != this) {
+                    if (tile instanceof Deer) {
                         int distance = calculateManhattanDistance(location, current_location);
-
-                        if (distance < min_distance_alpha) {
-                            min_distance_alpha = distance;
-                            closest_alpha_location = location;
+                        if (distance < min_deer_distance) {
+                            min_deer_distance = distance;
+                            closest_deer = location;
+                        }
+                    } else if (tile instanceof Rabbit) {
+                        int distance = calculateManhattanDistance(location, current_location);
+                        if (distance < min_rabbit_distance) {
+                            min_rabbit_distance = distance;
+                            closest_rabbit = location;
+                        }
+                    } else if (tile instanceof Carcass && isHungry()) {
+                        int distance = calculateManhattanDistance(location, current_location);
+                        if (distance < min_carcass_distance) {
+                            min_carcass_distance = distance;
+                            closest_carcass = location;
                         }
                     }
                 }
 
-                if (tile instanceof Rabbit) {
-                    int distance = calculateManhattanDistance(location, current_location);
-
-                    if (distance < min_distance_rabbit) {
-                        min_distance_rabbit = distance;
-                        closest_rabbit_location = location;
-                    }
+                Location target = null;
+                if (closest_deer != null) {
+                    target = closest_deer;
+                } else if (closest_rabbit != null) {
+                    target = closest_rabbit;
+                } else if (closest_carcass != null) {
+                    target = closest_carcass;
                 }
 
-                if (tile instanceof Carcass) {
-                    int distance = calculateManhattanDistance(location, current_location);
-
-                    if (distance < min_distance_carcass) {
-                        min_distance_carcass = distance;
-                        closest_carcass_location = location;
+                if (target != null) {
+                    Location next_tile = null;
+                    int best_distance = Integer.MAX_VALUE;
+                    for (Location tile : adjacent_tiles) {
+                        int distance = calculateManhattanDistance(tile, target);
+                        if (distance < best_distance) {
+                            best_distance = distance;
+                            next_tile = tile;
+                        }
+                    }
+                    if (next_tile != null && world.isTileEmpty(next_tile)) {
+                        world.move(this, next_tile);
+                    }
+                } else if (!adjacent_tiles.isEmpty()) {
+                    List<Location> list = new ArrayList<>(adjacent_tiles);
+                    Location randomTile = list.get(new Random().nextInt(list.size()));
+                    if (world.isTileEmpty(randomTile)) {
+                        world.move(this, randomTile);
                     }
                 }
             }
-            if (closest_rabbit_location != null) {
-                if (min_distance_rabbit == 1) {
-                    Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
-                    kill(rabbit);
-                    return;
-                }
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
+        } else {
+            if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
+                Location alpha_location = world.getLocation(alpha);
+                Location next_tile = null;
                 int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile: empty_tiles) {
-                    int distance = calculateManhattanDistance(tile, closest_rabbit_location);
+                for (Location tile : adjacent_tiles) {
+                    int distance = calculateManhattanDistance(tile, alpha_location);
                     if (distance < best_distance) {
                         best_distance = distance;
-                        best_tile = tile;
+                        next_tile = tile;
                     }
                 }
-                if (best_tile !=null) {
-                    world.move(this, best_tile);
-                    return;
+                if (next_tile != null && world.isTileEmpty(next_tile)) {
+                    world.move(this, next_tile);
                 }
-            }
-
-            if (isHungry() && closest_carcass_location != null) {
-                if (min_distance_carcass == 1) {
-                    Carcass carcass = (Carcass) world.getTile(closest_carcass_location);
-                    eatCarcass(carcass, this);
-                    return;
+            } else if (!adjacent_tiles.isEmpty()) {
+                List<Location> list = new ArrayList<>(adjacent_tiles);
+                Location randomTile = list.get(new Random().nextInt(list.size()));
+                if (world.isTileEmpty(randomTile)) {
+                    world.move(this, randomTile);
                 }
-
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
-                int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile : empty_tiles) {
-                    int distance = calculateManhattanDistance(tile, closest_carcass_location);
-
-                    if (distance < best_distance) {
-                        best_distance = distance;
-                        best_tile = tile;
-                    }
-                }
-
-                if (best_tile != null) {
-                    world.move(this, best_tile);
-                    return;
-                }
-            }
-
-            if (closest_rabbit_location != null) {
-                if (min_distance_rabbit == 1) {
-                    Rabbit rabbit = (Rabbit) world.getTile(closest_rabbit_location);
-                    kill(rabbit);
-                    return;
-                }
-
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
-                int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile : empty_tiles) {
-                    int distance = calculateManhattanDistance(tile, closest_rabbit_location);
-
-                    if (distance < best_distance) {
-                        best_distance = distance;
-                        best_tile = tile;
-                    }
-                }
-
-                if (best_tile != null) {
-                    world.move(this, best_tile);
-                    return;
-                }
-            }
-
-            if (!isHungry() && closest_alpha_location != null) {
-                if (min_distance_alpha == 1) {
-                    Wolf other_alpha = (Wolf) world.getTile(closest_alpha_location);
-                    fightAlpha(other_alpha);
-                    return;
-                }
-
-                Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-                Location best_tile = null;
-                int best_distance = Integer.MAX_VALUE;
-
-                for (Location tile : empty_tiles) {
-                    int distance = calculateManhattanDistance(tile, closest_alpha_location);
-
-                    if (distance < best_distance) {
-                        best_distance = distance;
-                        best_tile = tile;
-                    }
-                }
-
-                if (best_tile != null) {
-                    world.move(this, best_tile);
-                    return;
-                }
-            }
-        }
-
-        if (isAlpha) {
-            // Alpha with no followers moves randomly
-            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-            if (empty_tiles.isEmpty()) {
-                return;
-            }
-            List<Location> tiles_list = new ArrayList<>(empty_tiles);
-            int randomIndex = new Random().nextInt(tiles_list.size());
-            Location randomTile = tiles_list.get(randomIndex);
-            world.move(this, randomTile);
-            return;
-        }
-        // Follower movement logic
-        // Check if alpha is reproducing - move to den instead
-        if (alpha != null && alpha.is_reproduction_time) {
-            Location den_location = world.getLocation(den);
-
-            // Check if follower reached the den
-            if (current_location.equals(den_location)) {
-                enterDenForReproduction(current_location);
-                return;
-            }
-
-            // Move towards den
-            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-            Location closest_tile = null;
-            int min_distance = Integer.MAX_VALUE;
-            for (Location tile : empty_tiles) {
-                int distance = calculateManhattanDistance(tile, den_location);
-
-                if (distance < min_distance) {
-                    min_distance = distance;
-                    closest_tile = tile;
-                }
-            }
-
-            if (closest_tile != null) {
-                world.move(this, closest_tile);
-            }
-        } else if (alpha != null && world.contains(alpha) && world.isOnTile(alpha)) {
-            Location alpha_location = world.getLocation(alpha);
-
-            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-            Location closest_tile = null;
-            int min_distance = Integer.MAX_VALUE;
-            for (Location tile : empty_tiles) {
-                int distance = calculateManhattanDistance(tile, alpha_location);
-
-                if (distance < min_distance) {
-                    min_distance = distance;
-                    closest_tile = tile;
-                }
-            }
-
-            if (closest_tile != null) {
-                world.move(this, closest_tile);
-            }
-        } else if (alpha == null || !world.contains(alpha) || !world.isOnTile(alpha)){
-            Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-            if (!empty_tiles.isEmpty()) {
-                List<Location> empty_list = new ArrayList<>(empty_tiles);
-                int randomIndex = new Random().nextInt(empty_list.size());
-                Location randomTile = empty_list.get(randomIndex);
-                world.move(this, randomTile);
             }
         }
     }
 
     @Override
     protected void loseEnergyForMoving() {
-        int energy_reduction = 2;
+        double energy_reduction = 1;
         energy = energy - energy_reduction;
     }
 
@@ -385,7 +246,7 @@ public class Wolf extends Predator {
                 }
                 this.followers.clear();
             }
-            world.delete(this);
+            die();
         } else if (other_alpha.energy < this.energy) {
             if (other_alpha.followers != null) {
                 for (Wolf follower : other_alpha.followers) {
@@ -394,7 +255,7 @@ public class Wolf extends Predator {
                 }
                 other_alpha.followers.clear();
             }
-            world.delete(other_alpha);
+            other_alpha.die();
         } else {
             if (Math.random() < 0.5) {
                 if (this.followers != null) {
@@ -404,7 +265,7 @@ public class Wolf extends Predator {
                     }
                     this.followers.clear();
                 }
-                world.delete(this);
+                die();
             } else {
                 if (other_alpha.followers != null) {
                     for (Wolf follower : other_alpha.followers) {
@@ -413,9 +274,20 @@ public class Wolf extends Predator {
                     }
                     other_alpha.followers.clear();
                 }
-                world.delete(other_alpha);
+                other_alpha.die();
             }
         }
+    }
+
+    @Override
+    public void die() {
+        if (isAlpha && followers != null) {
+            for (Wolf follower : followers) {
+                follower.alpha = null;
+            }
+            followers.clear();
+        }
+        super.die();
     }
 
     public void enterDenForReproduction(Location location) {
@@ -426,47 +298,41 @@ public class Wolf extends Predator {
     }
 
     public void exitDenAfterReproduction() {
-        if (reproducing_location != null) {
-            Location den_location = world.getLocation(den);
-            Set<Location> exit_tiles = world.getEmptySurroundingTiles(den_location);
+        if (reproducing_location == null) {
+            return;
+        }
 
-            // Re-add alpha
+        if (world.isTileEmpty(reproducing_location)) {
+            world.setTile(reproducing_location, this);
+            reproducing_location = null;
+        } else {
+            Set<Location> exit_tiles = world.getEmptySurroundingTiles(reproducing_location);
             if (!exit_tiles.isEmpty()) {
                 Location exit_location = exit_tiles.iterator().next();
                 world.setTile(exit_location, this);
-                exit_tiles.remove(exit_location);
                 reproducing_location = null;
-            }
-
-            // Re-add all followers
-            if (followers != null) {
-                for (Wolf follower : followers) {
-                    if (follower.reproducing_location != null) {
-                        if (!exit_tiles.isEmpty()) {
-                            Location follower_exit = exit_tiles.iterator().next();
-                            world.setTile(follower_exit, follower);
-                            exit_tiles.remove(follower_exit);
-                            follower.reproducing_location = null;
-                            follower.simulation_counts_reproducing = 0;
-                        }
-                    }
-                }
-
-                // Create new pup
-                Wolf pup = new Wolf(world,false, den, this);
-                addFollower(pup);
-
-                if (!exit_tiles.isEmpty()) {
-                    Location pup_location = exit_tiles.iterator().next();
-                    world.setTile(pup_location, pup);
-                } else {
-                    // fallback: place pup on den tile
-                    world.setTile(den_location, pup);
-                }
+            } else {
+                simulation_counts_reproducing = 1;
+                return;
             }
         }
 
-        is_reproduction_time = false;
+        if (isAlpha) {
+            is_reproduction_time = false;
+
+            Wolf pup = new Wolf(world, false, den, this);
+            addFollower(pup);
+
+            Location den_location = world.getLocation(den);
+            Set<Location> pup_exit_tiles = world.getEmptySurroundingTiles(den_location);
+            if (!pup_exit_tiles.isEmpty()) {
+                Location pup_location = pup_exit_tiles.iterator().next();
+                world.setTile(pup_location, pup);
+            } else {
+                world.setTile(den_location, pup);
+            }
+        }
+
         simulation_counts_reproducing = 0;
     }
 }

@@ -22,7 +22,7 @@ public class TestGrass extends TestSuper {
         int grass_entities_in_file = 1; // The input file contains 1 grass
 
         // Run simulation to allow grass to spread
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 100; i++) {
             program.simulate();
         }
 

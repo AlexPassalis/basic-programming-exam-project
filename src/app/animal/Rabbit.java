@@ -136,7 +136,7 @@ public class Rabbit extends Animal {
 
     @Override
     protected void loseEnergyForMoving() {
-        double energy_multiplier = 1.25;
+        double energy_multiplier = 1.1;
         energy = energy - (age * energy_multiplier);
     }
 

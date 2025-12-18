@@ -7,7 +7,7 @@ import itumulator.world.Location;
 import itumulator.world.World;
 
 public class Animal implements Actor, Mortal {
-    World world;
+    public World world;
     protected double energy;
     private boolean carcass_has_fungi;
 

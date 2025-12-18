@@ -38,6 +38,9 @@ public class Bear extends Predator {
         Location closest_wolf_location = null;
         int min_wolf_distance = Integer.MAX_VALUE;
 
+        Location closest_deer_location = null;
+        int min_deer_distance = Integer.MAX_VALUE;
+
         Location closest_rabbit_location = null;
         int min_rabbit_distance = Integer.MAX_VALUE;
 
@@ -56,6 +59,15 @@ public class Bear extends Predator {
                 if (distance < min_wolf_distance) {
                     min_wolf_distance = distance;
                     closest_wolf_location = location;
+                }
+            }
+
+            if (tile instanceof Deer) {
+                int distance = calculateManhattanDistance(location, current_location);
+
+                if (distance < min_deer_distance) {
+                    min_deer_distance = distance;
+                    closest_deer_location = location;
                 }
             }
 
@@ -87,11 +99,13 @@ public class Bear extends Predator {
             }
         }
 
-        // Movement priority: Wolf > Rabbit > Carcass > Bush > Random
+        // Movement priority: Wolf > Deer > Rabbit > Carcass > Berry > Random
         Location target_destination = null;
 
         if (closest_wolf_location != null) {
             target_destination = closest_wolf_location;
+        } else if (closest_deer_location != null) {
+            target_destination = closest_deer_location;
         } else if (closest_rabbit_location != null) {
             target_destination = closest_rabbit_location;
         } else if (closest_carcass_location != null) {
@@ -130,7 +144,7 @@ public class Bear extends Predator {
         if (next_tile != null) {
             Object tile_at_new_location = world.getTile(next_tile);
 
-            if (tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
+            if (tile_at_new_location instanceof Deer || tile_at_new_location instanceof Rabbit || tile_at_new_location instanceof Wolf) {
                 Animal animal = (Animal) tile_at_new_location;
                 kill(animal);
                 return;
@@ -170,7 +184,7 @@ public class Bear extends Predator {
 
     @Override
     protected void loseEnergyForMoving() {
-        int energy_lost_for_moving = 4;
+        int energy_lost_for_moving = 2;
         energy = energy - energy_lost_for_moving;
     }
 
