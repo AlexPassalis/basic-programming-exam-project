@@ -82,8 +82,8 @@ public class Wolf extends Predator {
 
         if (!is_reproduction_time) {
             double reproduction_chance = 0.02;
-            double dice = new Random().nextDouble();
-            if (dice < reproduction_chance) {
+            double random_double = new Random().nextDouble();
+            if (random_double < reproduction_chance) {
                 is_reproduction_time = true;
             }
         }

@@ -40,7 +40,7 @@ public class OverlayCanvas extends JPanel{
         setBackground(null);
         running = new AtomicBoolean(false);
         this.clouds = new ArrayList<>();
-        for (int i = 0; i < CLOUD_AMOUNT; i++) {
+        for (int i = 0; i < CLOUD_AMOUNT; i = i + 1) {
             clouds.add(new Cloud(pixelSize));
         }
         if (startIso)

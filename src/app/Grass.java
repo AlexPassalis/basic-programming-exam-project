@@ -22,8 +22,8 @@ public class Grass implements Actor, NonBlocking, Edible {
 
     private void spread(World world) {
         double chance_to_spread = 0.05; // 5% chance for the Grass to spread
-        double dice = new Random().nextDouble();
-        if (chance_to_spread < dice) {
+        double random_double = new Random().nextDouble();
+        if (chance_to_spread < random_double) {
             return;
         }
 
@@ -41,8 +41,8 @@ public class Grass implements Actor, NonBlocking, Edible {
             return;
         }
 
-        int rand = new Random().nextInt(list.size()); // Find a random integer in our ArrayList of empty tiles.
-        Location location = list.get(rand); // Gets a random empty tile from the ArrayList.
+        int random_int = new Random().nextInt(list.size()); // Find a random integer in our ArrayList of empty tiles.
+        Location location = list.get(random_int); // Gets a random empty tile from the ArrayList.
         world.setTile(location, new Grass());
    }
 }

@@ -44,8 +44,7 @@ public class TestCarcass extends TestSuper {
           Carcass carcass = new Carcass(false);
           world.setTile(location, carcass);
 
-          final int MAX_STEPS = 50;
-          for (int i = 0; i < MAX_STEPS; i++) {
+          for (int i = 0; i < 50; i = i + 1) {
               if (!world.contains(carcass)) {
                   break;
               }
