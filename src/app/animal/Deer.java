@@ -22,45 +22,81 @@ public class Deer extends Animal {
             return;
         }
 
-        simulation_counts = simulation_counts + 1; // For every 10 ticks or simulation counts, the deer will age 1 year.
+        simulation_counts = simulation_counts + 1;
         if (simulation_counts % 10 == 0) {
             age = age + 1;
         }
 
-        super.act(world);
+        if (energy <= 0) {
+            die();
+            return;
+        }
+
         reproduce();
+        super.act(world);
     }
 
-    /**
-     * MovementLogic is a method for the deer's movement. It checks for the smartest tiles to pick.
-     * It prefers safe tiles as determined by filerUnsafeTiles. If no safe tiles are available. All tiles are considered.
-     */
     @Override
     protected void movementLogic() {
         Location current_location = world.getLocation(this);
+
+        Location predator_location = findNearbyPredator(2);
+        if (predator_location != null) {
+            Location flee_location = fleeFromPredator(predator_location);
+            if (flee_location != null) {
+                world.move(this, flee_location);
+                eatIfPossible(flee_location);
+                return;
+            }
+        }
+
         Set<Location> surrounding_tiles = world.getSurroundingTiles(current_location);
         if (surrounding_tiles.isEmpty()) {
             return;
         }
 
-        List<Location> allOptions = new ArrayList<>(surrounding_tiles);
-        List<Location> safeOptions = filterUnsafeTiles(allOptions);
+        List<Location> all_options = new ArrayList<>(surrounding_tiles);
+        List<Location> safe_options = filterUnsafeTiles(all_options);
 
         List<Location> options;
-        if (safeOptions.isEmpty()) {
-            options = allOptions;
+        if (safe_options.isEmpty()) {
+            options = all_options;
         } else {
-            options = safeOptions;
+            options = safe_options;
         }
 
-        Location best = chooseFoodTile(options);
-        if (best == null) best = options.get(new Random().nextInt(options.size())); // If no food tiles are available, a random tile is chosen.
+        Location best_tile = chooseFoodTile(options);
+        if (best_tile == null) {
+            List<Location> empty_tiles = new ArrayList<>();
+            for (Location option : options) {
+                if (world.isTileEmpty(option)) {
+                    empty_tiles.add(option);
+                }
+            }
 
-        world.move(this, best);
-        eatIfPossible(best);
+            if (!empty_tiles.isEmpty()) {
+                best_tile = empty_tiles.get(new Random().nextInt(empty_tiles.size()));
+            } else if (!options.isEmpty()) {
+                best_tile = options.get(new Random().nextInt(options.size()));
+            }
+        }
+
+        if (best_tile != null) {
+            Object tile_at_location = world.getTile(best_tile);
+
+            if (isStarving() && tile_at_location instanceof Carcass) {
+                eatCarcass((Carcass) tile_at_location, this);
+                return;
+            }
+
+            if (world.isTileEmpty(best_tile)) {
+                world.move(this, best_tile);
+            }
+            eatIfPossible(best_tile);
+        }
     }
 
-    private Location findNearbyPredator(int radius) { // Checks surrounding tiles for animals that extends Predator, for a certain radius.
+    private Location findNearbyPredator(int radius) {
         Location current_location = world.getLocation(this);
 
         for (Location surrounding_location : world.getSurroundingTiles(current_location, radius)) {
@@ -73,80 +109,51 @@ public class Deer extends Animal {
         return null;
     }
 
-    private Location fleeFromPredator() {
-
+    private Location fleeFromPredator(Location predator_location) {
         Location current_location = world.getLocation(this);
-        Location predator = findNearbyPredator(3);
-        if (predator == null) { // This is a method that works with the findNearbyPredator method and enables the deer to flee if it spots a predator.
+        Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+        if (empty_tiles.isEmpty()) {
             return null;
         }
 
-        Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
-        if (empty_tiles.isEmpty()) return null;
-
-        Location best = null;
-        int bestDistance = Integer.MIN_VALUE;
+        Location best_tile = null;
+        int best_distance = Integer.MIN_VALUE;
 
         for (Location tile : empty_tiles) {
-            int distance = calculateManhattanDistance(tile, predator);
+            int distance = calculateManhattanDistance(tile, predator_location);
 
-            if (distance > bestDistance) {
-                bestDistance = distance;
-                best = tile;
+            if (distance > best_distance) {
+                best_distance = distance;
+                best_tile = tile;
             }
         }
-        return best;
+
+        return best_tile;
     }
 
-    /**
-     * Every game tick / simulation count, the deer will lose 2 energy.
-     */
     @Override
     protected void loseEnergyForMoving() {
         int energy_reduction = 3;
         energy = energy - energy_reduction;
     }
-    public static void eat() {
-        World world = Main.getWorld();
-        Map<Object, Location> entities = world.getEntities();
 
-        for (Map.Entry<Object, Location> entry: entities.entrySet()) {
-            if (entry.getKey() instanceof Deer) {
-                Deer deer = (Deer) entry.getKey();
-                Location deerLocation = entry.getValue();
-
-                for (Location location: world.getSurroundingTiles(deerLocation)) {
-                    Object food = world.getNonBlocking(location);
-                    if (food instanceof Grass) {
-                        world.delete(food);
-                        deer.energy = deer.energy + 20;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    private void eatIfPossible(Location tile) { // Provides a method for the amount of energy a deer gets when eating.
+    private void eatIfPossible(Location tile) {
         Object food = world.getNonBlocking(tile);
 
         if (food instanceof Grass) {
-            world.delete(food);
+            ((Grass) food).getEaten(world);
             energy += 20;
         } else if (food instanceof Berry) {
-            world.delete(food);
+            ((Berry) food).getEaten(world);
             energy += 25;
         } else if (food instanceof Fungi) {
-            world.delete(food);
-            energy += 30;
-        } else if (food instanceof Carcass) { // Very rarely used.
-            world.delete(food);
+            ((Fungi) food).getEaten(world);
             energy += 30;
         }
     }
 
     private List<Location> filterUnsafeTiles(List<Location> tiles) {
-        if (isStarving()) { // Provides a method that checks for carcasses. If a deer is not starving, it will avoid carcasses. If it is starving, it will become desperate and add carcasses as a food source.
+        if (isStarving()) {
             return tiles;
         }
 
@@ -160,66 +167,77 @@ public class Deer extends Animal {
         return safe;
     }
 
-    private boolean isNearCarcass(Location carcassLocation) {
-        for (Location CarcassTile : world.getSurroundingTiles(carcassLocation, 1)) {
-            Object tile = world.getTile(CarcassTile);
-            if (tile instanceof Carcass)
+    private boolean isNearCarcass(Location carcass_location) {
+        for (Location carcass_tile : world.getSurroundingTiles(carcass_location, 1)) {
+            Object tile = world.getTile(carcass_tile);
+            if (tile instanceof Carcass) {
                 return true;
+            }
         }
-        return false; // Provides a method that checks for nearby carcasses. It returns a true boolean if carcasses is on nearby tiles. Otherwise it returns false.
+
+        return false;
     }
 
     private boolean isStarving() {
-        return energy < 30; // Checks if the deer is starving.
+        return energy < 30;
     }
 
     private Location chooseFoodTile(List<Location> options) {
         for (Location option : options) {
             Object food = world.getNonBlocking(option);
-            if (food instanceof Fungi  || food instanceof Berry || food instanceof Grass || food instanceof Carcass) {
+            if (food instanceof Fungi || food instanceof Berry || food instanceof Grass) {
                 return option;
             }
-        } // Checks for possible tiles and returns the first tile that contains food. If no tiles contain food, return null.
+
+            if (isStarving()) {
+                Object blocking = world.getTile(option);
+                if (blocking instanceof Carcass) {
+                    return option;
+                }
+            }
+        }
         return null;
     }
 
-    /**
-     * Provides a method for requirements for reproduction. The deer has to be a certain age and have a certain energy.
-     * The new baby deer is spawned at a possible empty tile from the deer with the biggest hashCode.
-     */
     public void reproduce() {
-        int minAge = 4;
-        if (age < minAge)
+        int min_age = 4;
+        if (age < min_age) {
             return;
+        }
 
-        double minEnergy = 70;
-        if (energy < minEnergy)
+        double min_energy = 70;
+        if (energy < min_energy) {
             return;
+        }
 
         Location current_location = world.getLocation(this);
 
         Deer partner = null;
-        for (Location l : world.getSurroundingTiles(current_location, 1)) {
-            Object o = world.getTile(l);
-            if (o instanceof Deer d && d.age >= minAge && d.energy >= minEnergy) {
-                partner = d;
+        for (Location location : world.getSurroundingTiles(current_location, 1)) {
+            Object object = world.getTile(location);
+            if (object instanceof Deer deer && deer.age >= min_age && deer.energy >= min_energy) {
+                partner = deer;
                 break;
             }
         }
-        if (partner == null)
+
+        if (partner == null) {
             return;
+        }
 
-        if (this.hashCode() < partner.hashCode())
+        if (this.hashCode() < partner.hashCode()) {
             return;
+        }
 
-        Set<Location> empty = world.getEmptySurroundingTiles(current_location);
-        if (empty.isEmpty())
+        Set<Location> empty_tiles = world.getEmptySurroundingTiles(current_location);
+        if (empty_tiles.isEmpty()) {
             return;
+        }
 
-        List<Location> tiles = new ArrayList<>(empty);
-        Location babyLocation = tiles.get(new Random().nextInt(tiles.size()));
+        List<Location> tiles = new ArrayList<>(empty_tiles);
+        Location baby_location = tiles.get(new Random().nextInt(tiles.size()));
 
-        world.setTile(babyLocation, new Deer(world,false));
+        world.setTile(baby_location, new Deer(world, false));
 
         energy = energy - 35;
         partner.energy = partner.energy - 35;

@@ -1,15 +1,13 @@
 package test;
 
-import app.Grass;
+import app.*;
 import app.animal.Deer;
+import app.animal.Wolf;
 import itumulator.world.Location;
 import org.junit.jupiter.api.Test;
 import java.io.FileNotFoundException;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 
 public class TestDeer extends TestSuper {
     @Test
@@ -24,48 +22,129 @@ public class TestDeer extends TestSuper {
     }
 
     @Test
-    public void deer_eats_grass() throws FileNotFoundException {
+    public void eats_grass() throws FileNotFoundException {
         setUp();
 
-        // Create a Deer and grass at adjacent locations
-        Location Deer_location = new Location(5, 5);
-        Location grass_location = new Location(5, 6); // Adjacent to deer
-
+        Location deer_location = new Location(5, 5);
         Deer deer = new Deer(world, false);
-        Grass grass = new Grass();
+        world.setTile(deer_location, deer);
 
-        world.setTile(Deer_location, deer);
+        Location grass_location = new Location(5, 6);
+        Grass grass = new Grass();
         world.setTile(grass_location, grass);
 
-        // Record deer's initial energy
         double initial_energy = deer.getEnergy();
 
-        // Make the deer eat the grass
-        Deer.eat();
+        deer.act(world);
 
-        // Verify deer's energy increased after eating
-        double energy_after_eating = deer.getEnergy();
-        assertTrue(energy_after_eating > initial_energy);
+        assertTrue(deer.getEnergy() > initial_energy);
+        assertFalse(world.containsNonBlocking(grass_location));
+    }
 
-        // Verify the grass was deleted from the world
-        Map<Object, Location> entities = world.getEntities();
-        boolean grass_exists = false;
-        for (Object entity : entities.keySet()) {
-            if (entity instanceof Grass) {
-                grass_exists = true;
-                break;
-            }
-        }
-        assertFalse(grass_exists);
+    @Test
+    public void eats_berry() throws FileNotFoundException {
+        setUp();
+
+        Location deer_location = new Location(5, 5);
+        Deer deer = new Deer(world, false);
+        world.setTile(deer_location, deer);
+
+        Location berry_location = new Location(5, 6);
+        Berry berry = new Berry();
+        world.setTile(berry_location, berry);
+
+        double initial_energy = deer.getEnergy();
+
+        deer.act(world);
+
+        assertTrue(deer.getEnergy() > initial_energy);
+    }
+
+    @Test
+    public void eats_fungi() throws FileNotFoundException {
+        setUp();
+
+        Location deer_location = new Location(5, 5);
+        Deer deer = new Deer(world, false);
+        world.setTile(deer_location, deer);
+
+        Location fungi_location = new Location(5, 6);
+        Fungi fungi = new Fungi(20);
+        world.setTile(fungi_location, fungi);
+
+        double initial_energy = deer.getEnergy();
+
+        deer.act(world);
+
+        assertTrue(deer.getEnergy() > initial_energy);
+    }
+
+    @Test
+    public void does_not_eat_carcass_when_not_starving() throws FileNotFoundException {
+        setUp();
+
+        Location deer_location = new Location(5, 5);
+        Deer deer = new Deer(world, false);
+        deer.setEnergy(50);
+        world.setTile(deer_location, deer);
+
+        Location carcass_location = new Location(5, 6);
+        Carcass carcass = new Carcass(false);
+        world.setTile(carcass_location, carcass);
+
+        deer.act(world);
+
+        assertTrue(world.getTile(carcass_location) instanceof Carcass);
+    }
+
+    @Test
+    public void eats_carcass_when_starving() throws FileNotFoundException {
+        setUp();
+
+        Location deer_location = new Location(5, 5);
+        Deer deer = new Deer(world, false);
+        deer.setEnergy(25);
+        world.setTile(deer_location, deer);
+
+        Location carcass_location = new Location(5, 6);
+        Carcass carcass = new Carcass(false);
+        world.setTile(carcass_location, carcass);
+
+        double initial_energy = deer.getEnergy();
+
+        deer.act(world);
+
+        assertTrue(deer.getEnergy() > initial_energy);
+    }
+
+    @Test
+    public void flees_from_predator() throws FileNotFoundException {
+        setUp();
+
+        Location deer_location = new Location(5, 5);
+        Deer deer = new Deer(world, false);
+        world.setTile(deer_location, deer);
+
+        Location wolf_location = new Location(5, 7);
+        Wolf wolf = new Wolf(world, false, null);
+        world.setTile(wolf_location, wolf);
+
+        deer.act(world);
+
+        Location new_deer_location = world.getLocation(deer);
+        int distance_before = Math.abs(5 - 5) + Math.abs(5 - 7);
+        int distance_after = Math.abs(new_deer_location.getX() - wolf_location.getX()) +
+                            Math.abs(new_deer_location.getY() - wolf_location.getY());
+
+        assertTrue(distance_after >= distance_before);
     }
 
     @Test
     public void can_reproduce() throws FileNotFoundException {
         setUp();
 
-        // Create two deers next to each other
         Location location1 = new Location(5, 5);
-        Location location2 = new Location(5, 6); // Adjacent to location1
+        Location location2 = new Location(5, 6);
 
         Deer deer1 = new Deer(world, false);
         Deer deer2 = new Deer(world, false);
@@ -73,67 +152,81 @@ public class TestDeer extends TestSuper {
         world.setTile(location1, deer1);
         world.setTile(location2, deer2);
 
-        // Set both deers to meet reproduction requirements (age >= 5, energy >= 50)
-        deer1.setAge(5);
-        deer1.setEnergy(100);
-        deer2.setAge(5);
-        deer2.setEnergy(100);
+        deer1.setAge(4);
+        deer1.setEnergy(70);
+        deer2.setAge(4);
+        deer2.setEnergy(70);
 
-        // Count deers before reproduction attempt
-        Map<Object, Location> entities_before = world.getEntities();
-        int deers_before = 0;
-        for (Object entity : entities_before.keySet()) {
+        int initial_deer_count = countDeer();
+
+        deer1.reproduce();
+
+        int final_deer_count = countDeer();
+
+        assertEquals(initial_deer_count + 1, final_deer_count);
+    }
+
+    @Test
+    public void cannot_reproduce_without_enough_energy() throws FileNotFoundException {
+        setUp();
+
+        Location location1 = new Location(5, 5);
+        Location location2 = new Location(5, 6);
+
+        Deer deer1 = new Deer(world, false);
+        Deer deer2 = new Deer(world, false);
+
+        world.setTile(location1, deer1);
+        world.setTile(location2, deer2);
+
+        deer1.setAge(4);
+        deer1.setEnergy(50);
+        deer2.setAge(4);
+        deer2.setEnergy(50);
+
+        int initial_deer_count = countDeer();
+
+        deer1.reproduce();
+
+        int final_deer_count = countDeer();
+
+        assertEquals(initial_deer_count, final_deer_count);
+    }
+
+    @Test
+    public void cannot_reproduce_without_enough_age() throws FileNotFoundException {
+        setUp();
+
+        Location location1 = new Location(5, 5);
+        Location location2 = new Location(5, 6);
+
+        Deer deer1 = new Deer(world, false);
+        Deer deer2 = new Deer(world, false);
+
+        world.setTile(location1, deer1);
+        world.setTile(location2, deer2);
+
+        deer1.setAge(2);
+        deer1.setEnergy(70);
+        deer2.setAge(2);
+        deer2.setEnergy(70);
+
+        int initial_deer_count = countDeer();
+
+        deer1.reproduce();
+
+        int final_deer_count = countDeer();
+
+        assertEquals(initial_deer_count, final_deer_count);
+    }
+
+    private int countDeer() {
+        int count = 0;
+        for (Object entity : world.getEntities().keySet()) {
             if (entity instanceof Deer) {
-                deers_before++;
+                count++;
             }
         }
-        assertEquals(2, deers_before);
-
-        // Record initial energies
-        double deer1_initial_energy = deer1.getEnergy();
-        double deer2_initial_energy = deer2.getEnergy();
-
-        // Call reproduce on both deers until one successfully reproduces
-        // This accounts for the hashCode comparison in reproduce() that determines which deer can reproduce
-        boolean reproduction_happened = false;
-        int max_attempts = 10;
-        int attempts = 0;
-
-        while (!reproduction_happened && attempts < max_attempts) {
-            deer1.reproduce();
-            deer2.reproduce();
-            attempts++;
-
-            // Check if reproduction happened by seeing if energy decreased
-            if (deer1.getEnergy() < deer1_initial_energy - 25 ||
-                    deer2.getEnergy() < deer2_initial_energy - 25) {
-                reproduction_happened = true;
-            }
-        }
-
-        // Count deers after reproduction
-        Map<Object, Location> entities_after = world.getEntities();
-        int deers_after = 0;
-        for (Object entity : entities_after.keySet()) {
-            if (entity instanceof Deer) {
-                deers_after++;
-            }
-        }
-
-        // Assert that exactly one new deer was born
-        assertEquals(deers_before + 1, deers_after);
+        return count;
     }
 }
-
-
-
-
-
-
-// Dyret skal kunne interagere med eksisterende elementer i økosystemet. Ådsler, planter og andre dyr.
-// Test om det kan spise ådsler, planter
-
-// Simuler dyrets livscyklus, herunder fødsel, vækst, reproduktion og død.
-//  Implementer dyrets fødekæde og prædator-bytte forhold.
-// Dyrets tilstedeværelse og adfærd skal kunne påvirke økosystemets balance og
-//dynamik.
