@@ -300,6 +300,9 @@ public class Wolf extends Predator {
         }
     }
 
+    /**
+     * Compares energy with another alpha; the loser dies and the winner takes over the pack.
+     */
     private void fightAlpha(Wolf other_alpha) {
         if (this.energy < other_alpha.energy) {
             if (this.followers != null) {
@@ -353,6 +356,9 @@ public class Wolf extends Predator {
         super.die();
     }
 
+    /**
+     * Removes the wolf from the map to simulate entering a den for reproduction.
+     */
     public void enterDenForReproduction(Location location) {
         reproducing_location = location;
         world.remove(this);
@@ -360,6 +366,9 @@ public class Wolf extends Predator {
         simulation_counts_reproducing = 15;
     }
 
+    /**
+     * Replaces the wolf on the map and creates a pup if the wolf is an alpha.
+     */
     public void exitDenAfterReproduction() {
         if (reproducing_location == null) {
             return;

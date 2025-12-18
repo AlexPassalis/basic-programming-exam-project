@@ -1,7 +1,6 @@
 package app;
 
 import java.awt.Color;
-
 import app.animal.Bear;
 import app.animal.Deer;
 import app.animal.Rabbit;
@@ -15,30 +14,28 @@ import java.util.Scanner;
 import java.io.File;
 import java.util.*;
 
-
-/* TODO
-- refactor big code into simpler functions e.g. in Main extractDataFromFile
-- Use java doc for functions descriptions
-- Use abstract class in Animal for the functions that do not have a body
-- Use interfaces for e.g. eatable, for the rabbit and grass ...
-- Split the code into modules, e.g. Animals and Nonblocking elements
-*/
-
+/**
+ * The Main class serves as the entry point for the simulation.
+ * It handles file parsing, world configuration, and object initialization.
+ */
 public class Main {
     private static Program program;
     private static World world;
 
+    /**
+     * Initializes the simulation by processing command-line arguments and starting the program.
+     */
     public static void main(String[] args) throws FileNotFoundException {
         if (args.length == 0) {
             System.out.println("Please provide input file path.");
             return;
-        } // If the user does not provide the file path that Main will generate the world out of, notify him.
+        }
         String filepath = args[0];
 
         boolean isTesting = false;
         if (args.length > 1) {
             isTesting = Boolean.parseBoolean(args[1]);
-        } // Use this boolean for test specific configuration.
+        }
 
         ParseInputFileReturnType input_file_info = parseInputFile(filepath);
         configureWorld(input_file_info);
@@ -59,14 +56,17 @@ public class Main {
         }
     }
 
+    /**
+     * Reads the input text file and extracts world size and entity spawn data.
+     */
     private static ParseInputFileReturnType parseInputFile(String filepath) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(filepath));
-        int size = scanner.nextInt(); // The size of the world defined in the input file.
+        int size = scanner.nextInt();
 
-        HashMap<String, HashMap<String, Integer>> data = new HashMap<>(); // The HashMap containing the info from the input file.
+        HashMap<String, HashMap<String, Integer>> data = new HashMap<>();
 
         scanner.nextLine();
-        int line_number = 0; // Track line number (0 indexed)
+        int line_number = 0;
         while (scanner.hasNextLine()) {
             line_number = line_number + 1;
 
@@ -75,7 +75,7 @@ public class Main {
                 continue;
             }
             String[] parts = line.split("\\s+");
-            String type = parts[0].trim().toLowerCase(); // Remove unnecessary spaces and convert to lowercase
+            String type = parts[0].trim().toLowerCase();
             if (!type.equals("grass") && !type.equals("rabbit") && !type.equals("burrow") && !type.equals("wolf") && !type.equals("bear") && !type.equals("berry") && !type.equals("carcass") && !type.equals("deer")) {
                 throw new IllegalArgumentException("Invalid type: " + type);
             }
@@ -117,7 +117,6 @@ public class Main {
                 values.put("max", Integer.parseInt(range[1]));
             }
 
-            // Create unique key using type and line number
             String unique_key = type + "_" + line_number;
             data.put(unique_key, values);
         }
@@ -128,6 +127,9 @@ public class Main {
         return result;
     }
 
+    /**
+     * Sets up the program environment, GUI display, and world grid.
+     */
     private static void configureWorld(ParseInputFileReturnType input_file_info) {
         int size = input_file_info.size;
         int display_size = 800;
@@ -142,6 +144,9 @@ public class Main {
         initializeAllObjects(data);
     }
 
+    /**
+     * Assigns colors and sprites to the different classes for the GUI.
+     */
     private static void configureDisplayInformation() {
         DisplayInformation GrassInfo = new DisplayInformation(Color.green, "custom-grass");
         program.setDisplayInformation(Grass.class, GrassInfo);
@@ -165,10 +170,13 @@ public class Main {
         program.setDisplayInformation(Deer.class, DeerInfo);
     }
 
+    /**
+     * Iterates through the parsed data to trigger the initialization of each entity type.
+     */
     private static void initializeAllObjects(HashMap<String, HashMap<String, Integer>> data) {
         for (Map.Entry<String, HashMap<String, Integer>> actor : data.entrySet()) {
             String unique_key = actor.getKey();
-            String type = unique_key.split("_")[0]; // Extract "wolf" from "wolf_2"
+            String type = unique_key.split("_")[0];
             HashMap<String, Integer> count = actor.getValue();
             int amount = count.get("count");
             if (amount == 0) {
@@ -184,14 +192,17 @@ public class Main {
                 spawn_location = new Location(spawn_x, spawn_y);
             }
 
-            boolean carcass_has_fungi = count.getOrDefault("fungi", 0) == 1; // default to 0 since, it might be null
+            boolean carcass_has_fungi = count.getOrDefault("fungi", 0) == 1;
 
             initializeSingleObject(type, amount, spawn_location, carcass_has_fungi);
         }
     }
 
+    /**
+     * Instantiates objects and places them into the world grid based on their type.
+     */
     private static void initializeSingleObject(String type, int amount, Location spawn_location, boolean carcass_has_fungi) {
-        Den wolf_den = null; // Create a single den for all wolves in this group
+        Den wolf_den = null;
         Wolf alpha_wolf = null;
 
         for (int i = 0; i < amount; i = i + 1) {
@@ -256,6 +267,9 @@ public class Main {
         }
     }
 
+    /**
+     * Finds a random coordinate that does not contain a blocking object.
+     */
     private static Location getEmptyLocation() {
         Random randon_number = new Random();
         int size = world.getSize();
@@ -273,6 +287,9 @@ public class Main {
         return location;
     }
 
+    /**
+     * Finds a random coordinate that does not contain a non-blocking object.
+     */
     private static Location getEmptyNonBlockingLocation() {
         Random randon_number = new Random();
         int size = world.getSize();
@@ -290,6 +307,9 @@ public class Main {
         return location;
     }
 
+    /**
+     * Executes the main simulation loop for a specified number of steps.
+     */
     private static void runProgram(int simulation_counts, String filepath) {
         program.show();
 
